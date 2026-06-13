@@ -2042,6 +2042,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const DEV=['१','२','३','४','५','६','७','८'];
 const ABCD=['A','B','C','D'];
+const KAKHA=['क','ख','ग','घ'];
 const OPTC=['#D4AF37','#3BA7A0','#D873A0','#8E86E0'];
 const OPTB=['rgba(212,175,55,0.55)','rgba(59,167,160,0.55)','rgba(216,115,160,0.55)','rgba(142,134,224,0.55)'];
 const UA=navigator.userAgent||'';
@@ -2308,9 +2309,12 @@ CARDS.quiz={ id:'quiz', label:'क्विज', animatable:true, isQuiz:true,
     const qs=[]; let cur=null;
     t.split('\n').forEach(raw=>{ const l=raw.trim(); if(!l) return;
       if(/(प्रश्न|प्रश्\.|question|^q\b|^q[\s:.\)])/i.test(l)){ const txt=l.replace(/^.*?(प्रश्न|question|q)\s*[०-९0-9]*\s*[:.\)\-]?\s*/i,'').trim(); cur={q:txt||l,opts:[],correct:0,time:5}; qs.push(cur); return; }
-      if(/^(सही|उत्तर|correct|answer|ans)\b/i.test(l)){ if(cur){ const v=l.replace(/^[^:.\)\-]*[:.\)\-]\s*/,'').trim().toLowerCase(); const c0=v.charAt(0); if(map[c0]!=null)cur.correct=map[c0]; else if(map[v]!=null)cur.correct=map[v]; } return; }
+      if(/^\s*(सही|सहि|उत्तर|correct|answer|ans)/i.test(l)){ if(cur){ let rest=l.replace(/^\s*(सही\s*उत्तर|सही|सहि|उत्तर|correct\s*answer|correct|answer|ans)\s*[:.\)\-]?\s*/i,'').trim();
+        const m2=rest.match(/(?:^|[\s\(])([कखगघabcdABCD१२३४1234])(?:[\s\)\.:\-]|$)/);
+        if(m2 && map[m2[1].toLowerCase()]!=null) cur.correct=map[m2[1].toLowerCase()];
+        else { const c0=rest.charAt(0).toLowerCase(); if(map[c0]!=null) cur.correct=map[c0]; } } return; }
       const mm=l.match(/^\(?\s*([कखगघabcdABCD१२३४1234])\s*[\.\):\-]\s*(.+)$/);
-      if(mm && cur){ const idx=map[mm[1].toLowerCase()]!=null?map[mm[1].toLowerCase()]:map[mm[1]]; if(idx!=null){ cur.opts[idx]=mm[2].trim(); return; } }
+      if(mm && cur){ const idx=map[mm[1].toLowerCase()]!=null?map[mm[1].toLowerCase()]:map[mm[1]]; if(idx!=null){ cur.opts[idx]=mm[2].trim().replace(/\s*[\(\[]?(✓|✔|सही|correct)[\)\]]?\s*$/i,'').trim(); if(/✓|✔|सही|correct/i.test(raw)) cur.correct=idx; return; } }
     });
     return {questions: qs.filter(q=>q.q)}; },
   caption:d=>`क्विज समय! 🧠 कति सही गर्नुहुन्छ?\n\n${(d.questions||[]).map((q,i)=>(DEV[i]||i+1)+'. '+q.q).join('\n')}\n\nजवाफ Comment 👇 (उत्तर भिडियोमा!) यस्ता क्विजका लागि Follow र Save गर्नुहोस्।\n\n#क्विज #Quiz #SanatanDharma #VidhiChakra #Nepal` };
@@ -2344,7 +2348,7 @@ function quizFrame(c,d,s,st){
       // filled badge (gold normally, green when correct) with dark letter
       const bx=optL+60*s, by=y+h/2;
       c.beginPath(); c.fillStyle=correct?C.green:OPTC[i]; c.arc(bx,by,34*s,0,Math.PI*2); c.fill();
-      fLab(c,34*s); centerOne(c,ABCD[i],bx,by+12*s,correct?'#EAFBE9':'#13183A');
+      fLab(c,34*s); centerOne(c,KAKHA[i],bx,by+12*s,correct?'#EAFBE9':'#13183A');
       // option text — warm cream, clearly secondary to the white question
       c.font=font; c.textAlign='left'; c.fillStyle=correct?'#EFFDEC':'#ECE0C4';
       const tY=by-(ol.length-1)*23*s+12*s; ol.forEach((ln,j)=>c.fillText(ln, optL+112*s, tY+j*46*s));
@@ -2397,7 +2401,7 @@ function quizEditor(d,onchange){ const wrap=document.createElement('div'); wrap.
       const qta=document.createElement('textarea'); qta.rows=2; qta.value=q.q; qta.placeholder='प्रश्न '+(qi+1); qta.oninput=()=>{q.q=qta.value;onchange();}; box.appendChild(qta);
       if(!q.opts)q.opts=['','','',''];
       q.opts.slice(0,4).forEach((o,oi)=>{ const row=document.createElement('div'); row.className='opt';
-        const pick=document.createElement('button'); pick.className='pick'+(q.correct===oi?' on':''); pick.textContent=ABCD[oi]; pick.onclick=()=>{q.correct=oi;onchange();redraw();}; row.appendChild(pick);
+        const pick=document.createElement('button'); pick.className='pick'+(q.correct===oi?' on':''); pick.textContent=KAKHA[oi]; pick.onclick=()=>{q.correct=oi;onchange();redraw();}; row.appendChild(pick);
         const inp=document.createElement('input'); inp.value=o; inp.oninput=()=>{q.opts[oi]=inp.value;onchange();}; row.appendChild(inp); box.appendChild(row); });
       if(q.time==null)q.time=5;
       const trow=document.createElement('div'); trow.style.cssText='display:flex;gap:6px;align-items:center;margin-top:2px;';
