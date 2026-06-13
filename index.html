@@ -1,0 +1,2538 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>विधि चक्र · Content Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Philosopher:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --base-0:#0A0E27; --base-1:#1A1F4D;
+    --ink:#F0E6D2; --ink-muted:#8B92B8;
+    --gold:#D4AF37; --gold-hi:#E8C766; --gold-deep:#9C7A1E;
+    --line:rgba(212,175,55,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;}
+  html,body{background:#05060f;color:var(--ink);font-family:'Philosopher',sans-serif;}
+  body{display:flex;flex-direction:column;align-items:center;padding:14px 14px calc(48px + env(safe-area-inset-bottom));gap:14px;min-height:100vh;}
+
+  header{text-align:center;margin-top:4px;}
+  header .ey{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.85;}
+  header h1{font-family:'Tiro Devanagari Sanskrit',serif;font-size:25px;font-weight:400;margin-top:3px;}
+  header p{font-family:'EB Garamond',serif;font-size:12px;color:var(--ink-muted);margin-top:1px;}
+
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:380px;}
+  .tab{font-family:'Tiro Devanagari Sanskrit',serif;font-size:14px;padding:7px 13px;border-radius:999px;
+    border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink-muted);cursor:pointer;}
+  .tab.on{background:linear-gradient(135deg,var(--gold),var(--gold-hi));color:#1a1405;border-color:transparent;font-weight:700;}
+
+  .stage{width:100%;max-width:330px;}
+  .frame{position:relative;width:100%;border-radius:14px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(212,175,55,.16);}
+  .frame.r916{aspect-ratio:1080/1920;}
+  .frame.r11{aspect-ratio:1/1;}
+  canvas{display:block;width:100%;height:100%;}
+
+  .panel{width:100%;max-width:360px;display:flex;flex-direction:column;gap:11px;}
+  .sec-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--ink-muted);margin:2px 0 -2px;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field>label{font-size:12px;letter-spacing:.5px;color:var(--gold);opacity:.9;}
+  input,textarea{font-family:'Tiro Devanagari Sanskrit',serif;font-size:15px;color:var(--ink);
+    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:9px;padding:9px 11px;resize:vertical;line-height:1.55;width:100%;}
+  input:focus,textarea:focus{outline:none;border-color:var(--gold);background:rgba(212,175,55,.06);}
+  .row{display:flex;gap:8px;align-items:flex-start;}
+  .row .num{font-family:'Tiro Devanagari Sanskrit',serif;color:var(--gold);font-size:17px;padding-top:9px;width:20px;text-align:center;flex:0 0 auto;}
+  .row .x{flex:0 0 auto;width:30px;height:30px;margin-top:6px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink-muted);font-size:16px;cursor:pointer;}
+  .mini{font-size:13px;padding:8px 10px;border-radius:9px;border:1px dashed var(--line);background:transparent;color:var(--gold);cursor:pointer;font-family:'Philosopher';letter-spacing:.5px;}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .btn{flex:1 1 auto;font-family:'Philosopher';font-size:14px;letter-spacing:.5px;border:none;border-radius:10px;padding:13px 10px;cursor:pointer;
+    background:linear-gradient(135deg,var(--gold),var(--gold-hi));color:#1a1405;font-weight:700;min-width:46%;}
+  .btn.ghost{background:rgba(255,255,255,.04);color:var(--ink);border:1px solid var(--line);font-weight:400;}
+  .btn:active{transform:translateY(1px);}
+  .quiz-q{border:1px solid var(--line);border-radius:11px;padding:10px;display:flex;flex-direction:column;gap:7px;background:rgba(255,255,255,.02);}
+  .opt{display:flex;gap:7px;align-items:center;}
+  .opt .pick{width:26px;height:26px;flex:0 0 auto;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink-muted);font-size:12px;cursor:pointer;}
+  .opt .pick.on{background:#2E7D32;border-color:#2E7D32;color:#fff;font-weight:700;}
+  .note{font-family:'EB Garamond',serif;font-size:12.5px;color:var(--ink-muted);text-align:center;line-height:1.5;}
+  .hint{font-size:11.5px;color:var(--ink-muted);}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(4,5,12,.92);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .modal.on{display:flex;}
+  .modal .box{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;align-items:center;}
+  .modal video{width:60%;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);}
+  .modal h3{font-family:'Tiro Devanagari Sanskrit';font-weight:400;font-size:18px;text-align:center;}
+  .modal .status{font-size:13px;color:var(--ink-muted);text-align:center;min-height:18px;}
+  .modal a.dl{font-size:13px;color:var(--gold);text-decoration:underline;}
+  .bar{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-hi));}
+  textarea.copybox{font-family:'EB Garamond',serif;font-size:13px;}
+</style>
+</head>
+<body>
+  <header>
+    <div class="ey">Content Studio</div>
+    <h1>विधि चक्र</h1>
+    <p>@vidhichakra · Sanatan Dharma · Vedic Jyotish</p>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="stage"><div class="frame r916" id="frameWrap"><canvas id="card" width="1080" height="1920"></canvas></div></div>
+
+  <div class="btns" style="max-width:360px;width:100%;">
+    <button class="btn" id="btnPng">PNG डाउनलोड</button>
+    <button class="btn ghost" id="btnVid">🎬 भिडियो (MP4)</button>
+  </div>
+
+  <div class="panel" id="panel"></div>
+
+  <div class="panel">
+    <div class="sec-title">AI सहायता · content tools</div>
+    <div class="btns">
+      <button class="btn ghost" id="btnPrompt">📋 AI Prompt कपी</button>
+      <button class="btn ghost" id="btnPaste">📥 Smart Paste</button>
+      <button class="btn ghost" id="btnCap">✍️ Caption बनाउनुहोस्</button>
+      <button class="btn ghost" id="btnReel">🎙️ Reel Script</button>
+    </div>
+    <textarea id="ioBox" class="copybox" rows="4" placeholder="यहाँ AI को जवाफ टाँस्नुहोस् → तल 'फिल्ड भर्नुहोस्' थिच्नुहोस्…"></textarea>
+    <button class="btn" id="btnParse" style="width:100%;">✨ माथिको जवाफबाट फिल्ड भर्नुहोस् (Parse)</button>
+    <div class="hint" id="ioHint">सुझाव: माथिको बटनले Nepali prompt कपी गर्छ → ChatGPT/Gemini मा टाँस्नुहोस् → जवाफ यहाँ टाँसेर "फिल्ड भर्नुहोस्" थिच्नुहोस्।</div>
+  </div>
+
+  <p class="note">सबै कार्ड iPhone को Photos मा सिधै सेभ हुन्छन्। भिडियो बनाएपछि "Save to Photos" थिच्नुहोस्।</p>
+
+  <!-- video modal -->
+  <div class="modal" id="vmodal">
+    <div class="box">
+      <h3 id="vtitle">भिडियो बन्दैछ…</h3>
+      <div class="bar" id="vbarwrap"><i id="vbar"></i></div>
+      <div class="status" id="vstatus">तयारी हुँदैछ…</div>
+      <video id="vpreview" playsinline muted loop controls style="display:none;"></video>
+      <img id="vimg" alt="card" style="display:none;width:62%;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);">
+      <button class="btn" id="vsave" style="display:none;">📲 Save to Photos</button>
+      <a class="dl" id="vdl" style="display:none;" download="vidhi-chakra.mp4">वा यहाँबाट डाउनलोड गर्नुहोस्</a>
+      <button class="btn ghost" id="vclose">बन्द गर्नुहोस्</button>
+    </div>
+  </div>
+
+<script>
+"use strict";
+var Mp4Muxer = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+  var __accessCheck = (obj, member, msg) => {
+    if (!member.has(obj))
+      throw TypeError("Cannot " + msg);
+  };
+  var __privateGet = (obj, member, getter) => {
+    __accessCheck(obj, member, "read from private field");
+    return getter ? getter.call(obj) : member.get(obj);
+  };
+  var __privateAdd = (obj, member, value) => {
+    if (member.has(obj))
+      throw TypeError("Cannot add the same private member more than once");
+    member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+  };
+  var __privateSet = (obj, member, value, setter) => {
+    __accessCheck(obj, member, "write to private field");
+    setter ? setter.call(obj, value) : member.set(obj, value);
+    return value;
+  };
+  var __privateWrapper = (obj, member, setter, getter) => ({
+    set _(value) {
+      __privateSet(obj, member, value, setter);
+    },
+    get _() {
+      return __privateGet(obj, member, getter);
+    }
+  });
+  var __privateMethod = (obj, member, method) => {
+    __accessCheck(obj, member, "access private method");
+    return method;
+  };
+
+  // src/index.ts
+  var src_exports = {};
+  __export(src_exports, {
+    ArrayBufferTarget: () => ArrayBufferTarget,
+    FileSystemWritableFileStreamTarget: () => FileSystemWritableFileStreamTarget,
+    Muxer: () => Muxer,
+    StreamTarget: () => StreamTarget
+  });
+
+  // src/misc.ts
+  var bytes = new Uint8Array(8);
+  var view = new DataView(bytes.buffer);
+  var u8 = (value) => {
+    return [(value % 256 + 256) % 256];
+  };
+  var u16 = (value) => {
+    view.setUint16(0, value, false);
+    return [bytes[0], bytes[1]];
+  };
+  var i16 = (value) => {
+    view.setInt16(0, value, false);
+    return [bytes[0], bytes[1]];
+  };
+  var u24 = (value) => {
+    view.setUint32(0, value, false);
+    return [bytes[1], bytes[2], bytes[3]];
+  };
+  var u32 = (value) => {
+    view.setUint32(0, value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var i32 = (value) => {
+    view.setInt32(0, value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var u64 = (value) => {
+    view.setUint32(0, Math.floor(value / 2 ** 32), false);
+    view.setUint32(4, value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]];
+  };
+  var fixed_8_8 = (value) => {
+    view.setInt16(0, 2 ** 8 * value, false);
+    return [bytes[0], bytes[1]];
+  };
+  var fixed_16_16 = (value) => {
+    view.setInt32(0, 2 ** 16 * value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var fixed_2_30 = (value) => {
+    view.setInt32(0, 2 ** 30 * value, false);
+    return [bytes[0], bytes[1], bytes[2], bytes[3]];
+  };
+  var ascii = (text, nullTerminated = false) => {
+    let bytes2 = Array(text.length).fill(null).map((_, i) => text.charCodeAt(i));
+    if (nullTerminated)
+      bytes2.push(0);
+    return bytes2;
+  };
+  var last = (arr) => {
+    return arr && arr[arr.length - 1];
+  };
+  var lastPresentedSample = (samples) => {
+    let result = void 0;
+    for (let sample of samples) {
+      if (!result || sample.presentationTimestamp > result.presentationTimestamp) {
+        result = sample;
+      }
+    }
+    return result;
+  };
+  var intoTimescale = (timeInSeconds, timescale, round = true) => {
+    let value = timeInSeconds * timescale;
+    return round ? Math.round(value) : value;
+  };
+  var rotationMatrix = (rotationInDegrees) => {
+    let theta = rotationInDegrees * (Math.PI / 180);
+    let cosTheta = Math.cos(theta);
+    let sinTheta = Math.sin(theta);
+    return [
+      cosTheta,
+      sinTheta,
+      0,
+      -sinTheta,
+      cosTheta,
+      0,
+      0,
+      0,
+      1
+    ];
+  };
+  var IDENTITY_MATRIX = rotationMatrix(0);
+  var matrixToBytes = (matrix) => {
+    return [
+      fixed_16_16(matrix[0]),
+      fixed_16_16(matrix[1]),
+      fixed_2_30(matrix[2]),
+      fixed_16_16(matrix[3]),
+      fixed_16_16(matrix[4]),
+      fixed_2_30(matrix[5]),
+      fixed_16_16(matrix[6]),
+      fixed_16_16(matrix[7]),
+      fixed_2_30(matrix[8])
+    ];
+  };
+  var deepClone = (x) => {
+    if (!x)
+      return x;
+    if (typeof x !== "object")
+      return x;
+    if (Array.isArray(x))
+      return x.map(deepClone);
+    return Object.fromEntries(Object.entries(x).map(([key, value]) => [key, deepClone(value)]));
+  };
+  var isU32 = (value) => {
+    return value >= 0 && value < 2 ** 32;
+  };
+
+  // src/box.ts
+  var box = (type, contents, children) => ({
+    type,
+    contents: contents && new Uint8Array(contents.flat(10)),
+    children
+  });
+  var fullBox = (type, version, flags, contents, children) => box(
+    type,
+    [u8(version), u24(flags), contents ?? []],
+    children
+  );
+  var ftyp = (details) => {
+    let minorVersion = 512;
+    if (details.fragmented)
+      return box("ftyp", [
+        ascii("iso5"),
+        // Major brand
+        u32(minorVersion),
+        // Minor version
+        // Compatible brands
+        ascii("iso5"),
+        ascii("iso6"),
+        ascii("mp41")
+      ]);
+    return box("ftyp", [
+      ascii("isom"),
+      // Major brand
+      u32(minorVersion),
+      // Minor version
+      // Compatible brands
+      ascii("isom"),
+      details.holdsAvc ? ascii("avc1") : [],
+      ascii("mp41")
+    ]);
+  };
+  var mdat = (reserveLargeSize) => ({ type: "mdat", largeSize: reserveLargeSize });
+  var free = (size) => ({ type: "free", size });
+  var moov = (tracks, creationTime, fragmented = false) => box("moov", null, [
+    mvhd(creationTime, tracks),
+    ...tracks.map((x) => trak(x, creationTime)),
+    fragmented ? mvex(tracks) : null
+  ]);
+  var mvhd = (creationTime, tracks) => {
+    let duration = intoTimescale(Math.max(
+      0,
+      ...tracks.filter((x) => x.samples.length > 0).map((x) => {
+        const lastSample = lastPresentedSample(x.samples);
+        return lastSample.presentationTimestamp + lastSample.duration;
+      })
+    ), GLOBAL_TIMESCALE);
+    let nextTrackId = Math.max(...tracks.map((x) => x.id)) + 1;
+    let needsU64 = !isU32(creationTime) || !isU32(duration);
+    let u32OrU64 = needsU64 ? u64 : u32;
+    return fullBox("mvhd", +needsU64, 0, [
+      u32OrU64(creationTime),
+      // Creation time
+      u32OrU64(creationTime),
+      // Modification time
+      u32(GLOBAL_TIMESCALE),
+      // Timescale
+      u32OrU64(duration),
+      // Duration
+      fixed_16_16(1),
+      // Preferred rate
+      fixed_8_8(1),
+      // Preferred volume
+      Array(10).fill(0),
+      // Reserved
+      matrixToBytes(IDENTITY_MATRIX),
+      // Matrix
+      Array(24).fill(0),
+      // Pre-defined
+      u32(nextTrackId)
+      // Next track ID
+    ]);
+  };
+  var trak = (track, creationTime) => box("trak", null, [
+    tkhd(track, creationTime),
+    mdia(track, creationTime)
+  ]);
+  var tkhd = (track, creationTime) => {
+    let lastSample = lastPresentedSample(track.samples);
+    let durationInGlobalTimescale = intoTimescale(
+      lastSample ? lastSample.presentationTimestamp + lastSample.duration : 0,
+      GLOBAL_TIMESCALE
+    );
+    let needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
+    let u32OrU64 = needsU64 ? u64 : u32;
+    let matrix;
+    if (track.info.type === "video") {
+      matrix = typeof track.info.rotation === "number" ? rotationMatrix(track.info.rotation) : track.info.rotation;
+    } else {
+      matrix = IDENTITY_MATRIX;
+    }
+    return fullBox("tkhd", +needsU64, 3, [
+      u32OrU64(creationTime),
+      // Creation time
+      u32OrU64(creationTime),
+      // Modification time
+      u32(track.id),
+      // Track ID
+      u32(0),
+      // Reserved
+      u32OrU64(durationInGlobalTimescale),
+      // Duration
+      Array(8).fill(0),
+      // Reserved
+      u16(0),
+      // Layer
+      u16(0),
+      // Alternate group
+      fixed_8_8(track.info.type === "audio" ? 1 : 0),
+      // Volume
+      u16(0),
+      // Reserved
+      matrixToBytes(matrix),
+      // Matrix
+      fixed_16_16(track.info.type === "video" ? track.info.width : 0),
+      // Track width
+      fixed_16_16(track.info.type === "video" ? track.info.height : 0)
+      // Track height
+    ]);
+  };
+  var mdia = (track, creationTime) => box("mdia", null, [
+    mdhd(track, creationTime),
+    hdlr(track.info.type === "video" ? "vide" : "soun"),
+    minf(track)
+  ]);
+  var mdhd = (track, creationTime) => {
+    let lastSample = lastPresentedSample(track.samples);
+    let localDuration = intoTimescale(
+      lastSample ? lastSample.presentationTimestamp + lastSample.duration : 0,
+      track.timescale
+    );
+    let needsU64 = !isU32(creationTime) || !isU32(localDuration);
+    let u32OrU64 = needsU64 ? u64 : u32;
+    return fullBox("mdhd", +needsU64, 0, [
+      u32OrU64(creationTime),
+      // Creation time
+      u32OrU64(creationTime),
+      // Modification time
+      u32(track.timescale),
+      // Timescale
+      u32OrU64(localDuration),
+      // Duration
+      u16(21956),
+      // Language ("und", undetermined)
+      u16(0)
+      // Quality
+    ]);
+  };
+  var hdlr = (componentSubtype) => fullBox("hdlr", 0, 0, [
+    ascii("mhlr"),
+    // Component type
+    ascii(componentSubtype),
+    // Component subtype
+    u32(0),
+    // Component manufacturer
+    u32(0),
+    // Component flags
+    u32(0),
+    // Component flags mask
+    ascii("mp4-muxer-hdlr", true)
+    // Component name
+  ]);
+  var minf = (track) => box("minf", null, [
+    track.info.type === "video" ? vmhd() : smhd(),
+    dinf(),
+    stbl(track)
+  ]);
+  var vmhd = () => fullBox("vmhd", 0, 1, [
+    u16(0),
+    // Graphics mode
+    u16(0),
+    // Opcolor R
+    u16(0),
+    // Opcolor G
+    u16(0)
+    // Opcolor B
+  ]);
+  var smhd = () => fullBox("smhd", 0, 0, [
+    u16(0),
+    // Balance
+    u16(0)
+    // Reserved
+  ]);
+  var dinf = () => box("dinf", null, [
+    dref()
+  ]);
+  var dref = () => fullBox("dref", 0, 0, [
+    u32(1)
+    // Entry count
+  ], [
+    url()
+  ]);
+  var url = () => fullBox("url ", 0, 1);
+  var stbl = (track) => {
+    const needsCtts = track.compositionTimeOffsetTable.length > 1 || track.compositionTimeOffsetTable.some((x) => x.sampleCompositionTimeOffset !== 0);
+    return box("stbl", null, [
+      stsd(track),
+      stts(track),
+      stss(track),
+      stsc(track),
+      stsz(track),
+      stco(track),
+      needsCtts ? ctts(track) : null
+    ]);
+  };
+  var stsd = (track) => fullBox("stsd", 0, 0, [
+    u32(1)
+    // Entry count
+  ], [
+    track.info.type === "video" ? videoSampleDescription(
+      VIDEO_CODEC_TO_BOX_NAME[track.info.codec],
+      track
+    ) : soundSampleDescription(
+      AUDIO_CODEC_TO_BOX_NAME[track.info.codec],
+      track
+    )
+  ]);
+  var videoSampleDescription = (compressionType, track) => box(compressionType, [
+    Array(6).fill(0),
+    // Reserved
+    u16(1),
+    // Data reference index
+    u16(0),
+    // Pre-defined
+    u16(0),
+    // Reserved
+    Array(12).fill(0),
+    // Pre-defined
+    u16(track.info.width),
+    // Width
+    u16(track.info.height),
+    // Height
+    u32(4718592),
+    // Horizontal resolution
+    u32(4718592),
+    // Vertical resolution
+    u32(0),
+    // Reserved
+    u16(1),
+    // Frame count
+    Array(32).fill(0),
+    // Compressor name
+    u16(24),
+    // Depth
+    i16(65535)
+    // Pre-defined
+  ], [
+    VIDEO_CODEC_TO_CONFIGURATION_BOX[track.info.codec](track),
+    track.info.decoderConfig.colorSpace ? colr(track) : null
+  ]);
+  var COLOR_PRIMARIES_MAP = {
+    "bt709": 1,
+    // ITU-R BT.709
+    "bt470bg": 5,
+    // ITU-R BT.470BG
+    "smpte170m": 6
+    // ITU-R BT.601 525 - SMPTE 170M
+  };
+  var TRANSFER_CHARACTERISTICS_MAP = {
+    "bt709": 1,
+    // ITU-R BT.709
+    "smpte170m": 6,
+    // SMPTE 170M
+    "iec61966-2-1": 13
+    // IEC 61966-2-1
+  };
+  var MATRIX_COEFFICIENTS_MAP = {
+    "rgb": 0,
+    // Identity
+    "bt709": 1,
+    // ITU-R BT.709
+    "bt470bg": 5,
+    // ITU-R BT.470BG
+    "smpte170m": 6
+    // SMPTE 170M
+  };
+  var colr = (track) => box("colr", [
+    ascii("nclx"),
+    // Colour type
+    u16(COLOR_PRIMARIES_MAP[track.info.decoderConfig.colorSpace.primaries]),
+    // Colour primaries
+    u16(TRANSFER_CHARACTERISTICS_MAP[track.info.decoderConfig.colorSpace.transfer]),
+    // Transfer characteristics
+    u16(MATRIX_COEFFICIENTS_MAP[track.info.decoderConfig.colorSpace.matrix]),
+    // Matrix coefficients
+    u8((track.info.decoderConfig.colorSpace.fullRange ? 1 : 0) << 7)
+    // Full range flag
+  ]);
+  var avcC = (track) => track.info.decoderConfig && box("avcC", [
+    // For AVC, description is an AVCDecoderConfigurationRecord, so nothing else to do here
+    ...new Uint8Array(track.info.decoderConfig.description)
+  ]);
+  var hvcC = (track) => track.info.decoderConfig && box("hvcC", [
+    // For HEVC, description is a HEVCDecoderConfigurationRecord, so nothing else to do here
+    ...new Uint8Array(track.info.decoderConfig.description)
+  ]);
+  var vpcC = (track) => {
+    if (!track.info.decoderConfig) {
+      return null;
+    }
+    let decoderConfig = track.info.decoderConfig;
+    if (!decoderConfig.colorSpace) {
+      throw new Error(`'colorSpace' is required in the decoder config for VP9.`);
+    }
+    let parts = decoderConfig.codec.split(".");
+    let profile = Number(parts[1]);
+    let level = Number(parts[2]);
+    let bitDepth = Number(parts[3]);
+    let chromaSubsampling = 0;
+    let thirdByte = (bitDepth << 4) + (chromaSubsampling << 1) + Number(decoderConfig.colorSpace.fullRange);
+    let colourPrimaries = 2;
+    let transferCharacteristics = 2;
+    let matrixCoefficients = 2;
+    return fullBox("vpcC", 1, 0, [
+      u8(profile),
+      // Profile
+      u8(level),
+      // Level
+      u8(thirdByte),
+      // Bit depth, chroma subsampling, full range
+      u8(colourPrimaries),
+      // Colour primaries
+      u8(transferCharacteristics),
+      // Transfer characteristics
+      u8(matrixCoefficients),
+      // Matrix coefficients
+      u16(0)
+      // Codec initialization data size
+    ]);
+  };
+  var av1C = () => {
+    let marker = 1;
+    let version = 1;
+    let firstByte = (marker << 7) + version;
+    return box("av1C", [
+      firstByte,
+      0,
+      0,
+      0
+    ]);
+  };
+  var soundSampleDescription = (compressionType, track) => box(compressionType, [
+    Array(6).fill(0),
+    // Reserved
+    u16(1),
+    // Data reference index
+    u16(0),
+    // Version
+    u16(0),
+    // Revision level
+    u32(0),
+    // Vendor
+    u16(track.info.numberOfChannels),
+    // Number of channels
+    u16(16),
+    // Sample size (bits)
+    u16(0),
+    // Compression ID
+    u16(0),
+    // Packet size
+    fixed_16_16(track.info.sampleRate)
+    // Sample rate
+  ], [
+    AUDIO_CODEC_TO_CONFIGURATION_BOX[track.info.codec](track)
+  ]);
+  var esds = (track) => {
+    let description = new Uint8Array(track.info.decoderConfig.description);
+    return fullBox("esds", 0, 0, [
+      // https://stackoverflow.com/a/54803118
+      u32(58753152),
+      // TAG(3) = Object Descriptor ([2])
+      u8(32 + description.byteLength),
+      // length of this OD (which includes the next 2 tags)
+      u16(1),
+      // ES_ID = 1
+      u8(0),
+      // flags etc = 0
+      u32(75530368),
+      // TAG(4) = ES Descriptor ([2]) embedded in above OD
+      u8(18 + description.byteLength),
+      // length of this ESD
+      u8(64),
+      // MPEG-4 Audio
+      u8(21),
+      // stream type(6bits)=5 audio, flags(2bits)=1
+      u24(0),
+      // 24bit buffer size
+      u32(130071),
+      // max bitrate
+      u32(130071),
+      // avg bitrate
+      u32(92307584),
+      // TAG(5) = ASC ([2],[3]) embedded in above OD
+      u8(description.byteLength),
+      // length
+      ...description,
+      u32(109084800),
+      // TAG(6)
+      u8(1),
+      // length
+      u8(2)
+      // data
+    ]);
+  };
+  var dOps = (track) => {
+    let preskip = 3840;
+    let gain = 0;
+    const description = track.info.decoderConfig?.description;
+    if (description) {
+      if (description.byteLength < 18) {
+        throw new TypeError("Invalid decoder description provided for Opus; must be at least 18 bytes long.");
+      }
+      const view2 = ArrayBuffer.isView(description) ? new DataView(description.buffer, description.byteOffset, description.byteLength) : new DataView(description);
+      preskip = view2.getUint16(10, true);
+      gain = view2.getInt16(14, true);
+    }
+    return box("dOps", [
+      u8(0),
+      // Version
+      u8(track.info.numberOfChannels),
+      // OutputChannelCount
+      u16(preskip),
+      u32(track.info.sampleRate),
+      // InputSampleRate
+      fixed_8_8(gain),
+      // OutputGain
+      u8(0)
+      // ChannelMappingFamily
+    ]);
+  };
+  var stts = (track) => {
+    return fullBox("stts", 0, 0, [
+      u32(track.timeToSampleTable.length),
+      // Number of entries
+      track.timeToSampleTable.map((x) => [
+        // Time-to-sample table
+        u32(x.sampleCount),
+        // Sample count
+        u32(x.sampleDelta)
+        // Sample duration
+      ])
+    ]);
+  };
+  var stss = (track) => {
+    if (track.samples.every((x) => x.type === "key"))
+      return null;
+    let keySamples = [...track.samples.entries()].filter(([, sample]) => sample.type === "key");
+    return fullBox("stss", 0, 0, [
+      u32(keySamples.length),
+      // Number of entries
+      keySamples.map(([index]) => u32(index + 1))
+      // Sync sample table
+    ]);
+  };
+  var stsc = (track) => {
+    return fullBox("stsc", 0, 0, [
+      u32(track.compactlyCodedChunkTable.length),
+      // Number of entries
+      track.compactlyCodedChunkTable.map((x) => [
+        // Sample-to-chunk table
+        u32(x.firstChunk),
+        // First chunk
+        u32(x.samplesPerChunk),
+        // Samples per chunk
+        u32(1)
+        // Sample description index
+      ])
+    ]);
+  };
+  var stsz = (track) => fullBox("stsz", 0, 0, [
+    u32(0),
+    // Sample size (0 means non-constant size)
+    u32(track.samples.length),
+    // Number of entries
+    track.samples.map((x) => u32(x.size))
+    // Sample size table
+  ]);
+  var stco = (track) => {
+    if (track.finalizedChunks.length > 0 && last(track.finalizedChunks).offset >= 2 ** 32) {
+      return fullBox("co64", 0, 0, [
+        u32(track.finalizedChunks.length),
+        // Number of entries
+        track.finalizedChunks.map((x) => u64(x.offset))
+        // Chunk offset table
+      ]);
+    }
+    return fullBox("stco", 0, 0, [
+      u32(track.finalizedChunks.length),
+      // Number of entries
+      track.finalizedChunks.map((x) => u32(x.offset))
+      // Chunk offset table
+    ]);
+  };
+  var ctts = (track) => {
+    return fullBox("ctts", 0, 0, [
+      u32(track.compositionTimeOffsetTable.length),
+      // Number of entries
+      track.compositionTimeOffsetTable.map((x) => [
+        // Time-to-sample table
+        u32(x.sampleCount),
+        // Sample count
+        u32(x.sampleCompositionTimeOffset)
+        // Sample offset
+      ])
+    ]);
+  };
+  var mvex = (tracks) => {
+    return box("mvex", null, tracks.map(trex));
+  };
+  var trex = (track) => {
+    return fullBox("trex", 0, 0, [
+      u32(track.id),
+      // Track ID
+      u32(1),
+      // Default sample description index
+      u32(0),
+      // Default sample duration
+      u32(0),
+      // Default sample size
+      u32(0)
+      // Default sample flags
+    ]);
+  };
+  var moof = (sequenceNumber, tracks) => {
+    return box("moof", null, [
+      mfhd(sequenceNumber),
+      ...tracks.map(traf)
+    ]);
+  };
+  var mfhd = (sequenceNumber) => {
+    return fullBox("mfhd", 0, 0, [
+      u32(sequenceNumber)
+      // Sequence number
+    ]);
+  };
+  var fragmentSampleFlags = (sample) => {
+    let byte1 = 0;
+    let byte2 = 0;
+    let byte3 = 0;
+    let byte4 = 0;
+    let sampleIsDifferenceSample = sample.type === "delta";
+    byte2 |= +sampleIsDifferenceSample;
+    if (sampleIsDifferenceSample) {
+      byte1 |= 1;
+    } else {
+      byte1 |= 2;
+    }
+    return byte1 << 24 | byte2 << 16 | byte3 << 8 | byte4;
+  };
+  var traf = (track) => {
+    return box("traf", null, [
+      tfhd(track),
+      tfdt(track),
+      trun(track)
+    ]);
+  };
+  var tfhd = (track) => {
+    let tfFlags = 0;
+    tfFlags |= 8;
+    tfFlags |= 16;
+    tfFlags |= 32;
+    tfFlags |= 131072;
+    let referenceSample = track.currentChunk.samples[1] ?? track.currentChunk.samples[0];
+    let referenceSampleInfo = {
+      duration: referenceSample.timescaleUnitsToNextSample,
+      size: referenceSample.size,
+      flags: fragmentSampleFlags(referenceSample)
+    };
+    return fullBox("tfhd", 0, tfFlags, [
+      u32(track.id),
+      // Track ID
+      u32(referenceSampleInfo.duration),
+      // Default sample duration
+      u32(referenceSampleInfo.size),
+      // Default sample size
+      u32(referenceSampleInfo.flags)
+      // Default sample flags
+    ]);
+  };
+  var tfdt = (track) => {
+    return fullBox("tfdt", 1, 0, [
+      u64(intoTimescale(track.currentChunk.startTimestamp, track.timescale))
+      // Base Media Decode Time
+    ]);
+  };
+  var trun = (track) => {
+    let allSampleDurations = track.currentChunk.samples.map((x) => x.timescaleUnitsToNextSample);
+    let allSampleSizes = track.currentChunk.samples.map((x) => x.size);
+    let allSampleFlags = track.currentChunk.samples.map(fragmentSampleFlags);
+    let allSampleCompositionTimeOffsets = track.currentChunk.samples.map((x) => intoTimescale(x.presentationTimestamp - x.decodeTimestamp, track.timescale));
+    let uniqueSampleDurations = new Set(allSampleDurations);
+    let uniqueSampleSizes = new Set(allSampleSizes);
+    let uniqueSampleFlags = new Set(allSampleFlags);
+    let uniqueSampleCompositionTimeOffsets = new Set(allSampleCompositionTimeOffsets);
+    let firstSampleFlagsPresent = uniqueSampleFlags.size === 2 && allSampleFlags[0] !== allSampleFlags[1];
+    let sampleDurationPresent = uniqueSampleDurations.size > 1;
+    let sampleSizePresent = uniqueSampleSizes.size > 1;
+    let sampleFlagsPresent = !firstSampleFlagsPresent && uniqueSampleFlags.size > 1;
+    let sampleCompositionTimeOffsetsPresent = uniqueSampleCompositionTimeOffsets.size > 1 || [...uniqueSampleCompositionTimeOffsets].some((x) => x !== 0);
+    let flags = 0;
+    flags |= 1;
+    flags |= 4 * +firstSampleFlagsPresent;
+    flags |= 256 * +sampleDurationPresent;
+    flags |= 512 * +sampleSizePresent;
+    flags |= 1024 * +sampleFlagsPresent;
+    flags |= 2048 * +sampleCompositionTimeOffsetsPresent;
+    return fullBox("trun", 1, flags, [
+      u32(track.currentChunk.samples.length),
+      // Sample count
+      u32(track.currentChunk.offset - track.currentChunk.moofOffset || 0),
+      // Data offset
+      firstSampleFlagsPresent ? u32(allSampleFlags[0]) : [],
+      track.currentChunk.samples.map((_, i) => [
+        sampleDurationPresent ? u32(allSampleDurations[i]) : [],
+        // Sample duration
+        sampleSizePresent ? u32(allSampleSizes[i]) : [],
+        // Sample size
+        sampleFlagsPresent ? u32(allSampleFlags[i]) : [],
+        // Sample flags
+        // Sample composition time offsets
+        sampleCompositionTimeOffsetsPresent ? i32(allSampleCompositionTimeOffsets[i]) : []
+      ])
+    ]);
+  };
+  var mfra = (tracks) => {
+    return box("mfra", null, [
+      ...tracks.map(tfra),
+      mfro()
+    ]);
+  };
+  var tfra = (track, trackIndex) => {
+    let version = 1;
+    return fullBox("tfra", version, 0, [
+      u32(track.id),
+      // Track ID
+      u32(63),
+      // This specifies that traf number, trun number and sample number are 32-bit ints
+      u32(track.finalizedChunks.length),
+      // Number of entries
+      track.finalizedChunks.map((chunk) => [
+        u64(intoTimescale(chunk.startTimestamp, track.timescale)),
+        // Time
+        u64(chunk.moofOffset),
+        // moof offset
+        u32(trackIndex + 1),
+        // traf number
+        u32(1),
+        // trun number
+        u32(1)
+        // Sample number
+      ])
+    ]);
+  };
+  var mfro = () => {
+    return fullBox("mfro", 0, 0, [
+      // This value needs to be overwritten manually from the outside, where the actual size of the enclosing mfra box
+      // is known
+      u32(0)
+      // Size
+    ]);
+  };
+  var VIDEO_CODEC_TO_BOX_NAME = {
+    "avc": "avc1",
+    "hevc": "hvc1",
+    "vp9": "vp09",
+    "av1": "av01"
+  };
+  var VIDEO_CODEC_TO_CONFIGURATION_BOX = {
+    "avc": avcC,
+    "hevc": hvcC,
+    "vp9": vpcC,
+    "av1": av1C
+  };
+  var AUDIO_CODEC_TO_BOX_NAME = {
+    "aac": "mp4a",
+    "opus": "Opus"
+  };
+  var AUDIO_CODEC_TO_CONFIGURATION_BOX = {
+    "aac": esds,
+    "opus": dOps
+  };
+
+  // src/target.ts
+  var isTarget = Symbol("isTarget");
+  var Target = class {
+  };
+  isTarget;
+  var ArrayBufferTarget = class extends Target {
+    constructor() {
+      super(...arguments);
+      this.buffer = null;
+    }
+  };
+  var StreamTarget = class extends Target {
+    constructor(options) {
+      super();
+      this.options = options;
+      if (typeof options !== "object") {
+        throw new TypeError("StreamTarget requires an options object to be passed to its constructor.");
+      }
+      if (options.onData) {
+        if (typeof options.onData !== "function") {
+          throw new TypeError("options.onData, when provided, must be a function.");
+        }
+        if (options.onData.length < 2) {
+          throw new TypeError(
+            "options.onData, when provided, must be a function that takes in at least two arguments (data and position). Ignoring the position argument, which specifies the byte offset at which the data is to be written, can lead to broken outputs."
+          );
+        }
+      }
+      if (options.chunked !== void 0 && typeof options.chunked !== "boolean") {
+        throw new TypeError("options.chunked, when provided, must be a boolean.");
+      }
+      if (options.chunkSize !== void 0 && (!Number.isInteger(options.chunkSize) || options.chunkSize < 1024)) {
+        throw new TypeError("options.chunkSize, when provided, must be an integer and not smaller than 1024.");
+      }
+    }
+  };
+  var FileSystemWritableFileStreamTarget = class extends Target {
+    constructor(stream, options) {
+      super();
+      this.stream = stream;
+      this.options = options;
+      if (!(stream instanceof FileSystemWritableFileStream)) {
+        throw new TypeError("FileSystemWritableFileStreamTarget requires a FileSystemWritableFileStream instance.");
+      }
+      if (options !== void 0 && typeof options !== "object") {
+        throw new TypeError("FileSystemWritableFileStreamTarget's options, when provided, must be an object.");
+      }
+      if (options) {
+        if (options.chunkSize !== void 0 && (!Number.isInteger(options.chunkSize) || options.chunkSize <= 0)) {
+          throw new TypeError("options.chunkSize, when provided, must be a positive integer");
+        }
+      }
+    }
+  };
+
+  // src/writer.ts
+  var _helper, _helperView;
+  var Writer = class {
+    constructor() {
+      this.pos = 0;
+      __privateAdd(this, _helper, new Uint8Array(8));
+      __privateAdd(this, _helperView, new DataView(__privateGet(this, _helper).buffer));
+      /**
+       * Stores the position from the start of the file to where boxes elements have been written. This is used to
+       * rewrite/edit elements that were already added before, and to measure sizes of things.
+       */
+      this.offsets = /* @__PURE__ */ new WeakMap();
+    }
+    /** Sets the current position for future writes to a new one. */
+    seek(newPos) {
+      this.pos = newPos;
+    }
+    writeU32(value) {
+      __privateGet(this, _helperView).setUint32(0, value, false);
+      this.write(__privateGet(this, _helper).subarray(0, 4));
+    }
+    writeU64(value) {
+      __privateGet(this, _helperView).setUint32(0, Math.floor(value / 2 ** 32), false);
+      __privateGet(this, _helperView).setUint32(4, value, false);
+      this.write(__privateGet(this, _helper).subarray(0, 8));
+    }
+    writeAscii(text) {
+      for (let i = 0; i < text.length; i++) {
+        __privateGet(this, _helperView).setUint8(i % 8, text.charCodeAt(i));
+        if (i % 8 === 7)
+          this.write(__privateGet(this, _helper));
+      }
+      if (text.length % 8 !== 0) {
+        this.write(__privateGet(this, _helper).subarray(0, text.length % 8));
+      }
+    }
+    writeBox(box2) {
+      this.offsets.set(box2, this.pos);
+      if (box2.contents && !box2.children) {
+        this.writeBoxHeader(box2, box2.size ?? box2.contents.byteLength + 8);
+        this.write(box2.contents);
+      } else {
+        let startPos = this.pos;
+        this.writeBoxHeader(box2, 0);
+        if (box2.contents)
+          this.write(box2.contents);
+        if (box2.children) {
+          for (let child of box2.children)
+            if (child)
+              this.writeBox(child);
+        }
+        let endPos = this.pos;
+        let size = box2.size ?? endPos - startPos;
+        this.seek(startPos);
+        this.writeBoxHeader(box2, size);
+        this.seek(endPos);
+      }
+    }
+    writeBoxHeader(box2, size) {
+      this.writeU32(box2.largeSize ? 1 : size);
+      this.writeAscii(box2.type);
+      if (box2.largeSize)
+        this.writeU64(size);
+    }
+    measureBoxHeader(box2) {
+      return 8 + (box2.largeSize ? 8 : 0);
+    }
+    patchBox(box2) {
+      let endPos = this.pos;
+      this.seek(this.offsets.get(box2));
+      this.writeBox(box2);
+      this.seek(endPos);
+    }
+    measureBox(box2) {
+      if (box2.contents && !box2.children) {
+        let headerSize = this.measureBoxHeader(box2);
+        return headerSize + box2.contents.byteLength;
+      } else {
+        let result = this.measureBoxHeader(box2);
+        if (box2.contents)
+          result += box2.contents.byteLength;
+        if (box2.children) {
+          for (let child of box2.children)
+            if (child)
+              result += this.measureBox(child);
+        }
+        return result;
+      }
+    }
+  };
+  _helper = new WeakMap();
+  _helperView = new WeakMap();
+  var _target, _buffer, _bytes, _maxPos, _ensureSize, ensureSize_fn;
+  var ArrayBufferTargetWriter = class extends Writer {
+    constructor(target) {
+      super();
+      __privateAdd(this, _ensureSize);
+      __privateAdd(this, _target, void 0);
+      __privateAdd(this, _buffer, new ArrayBuffer(2 ** 16));
+      __privateAdd(this, _bytes, new Uint8Array(__privateGet(this, _buffer)));
+      __privateAdd(this, _maxPos, 0);
+      __privateSet(this, _target, target);
+    }
+    write(data) {
+      __privateMethod(this, _ensureSize, ensureSize_fn).call(this, this.pos + data.byteLength);
+      __privateGet(this, _bytes).set(data, this.pos);
+      this.pos += data.byteLength;
+      __privateSet(this, _maxPos, Math.max(__privateGet(this, _maxPos), this.pos));
+    }
+    finalize() {
+      __privateMethod(this, _ensureSize, ensureSize_fn).call(this, this.pos);
+      __privateGet(this, _target).buffer = __privateGet(this, _buffer).slice(0, Math.max(__privateGet(this, _maxPos), this.pos));
+    }
+  };
+  _target = new WeakMap();
+  _buffer = new WeakMap();
+  _bytes = new WeakMap();
+  _maxPos = new WeakMap();
+  _ensureSize = new WeakSet();
+  ensureSize_fn = function(size) {
+    let newLength = __privateGet(this, _buffer).byteLength;
+    while (newLength < size)
+      newLength *= 2;
+    if (newLength === __privateGet(this, _buffer).byteLength)
+      return;
+    let newBuffer = new ArrayBuffer(newLength);
+    let newBytes = new Uint8Array(newBuffer);
+    newBytes.set(__privateGet(this, _bytes), 0);
+    __privateSet(this, _buffer, newBuffer);
+    __privateSet(this, _bytes, newBytes);
+  };
+  var DEFAULT_CHUNK_SIZE = 2 ** 24;
+  var MAX_CHUNKS_AT_ONCE = 2;
+  var _target2, _sections, _chunked, _chunkSize, _chunks, _writeDataIntoChunks, writeDataIntoChunks_fn, _insertSectionIntoChunk, insertSectionIntoChunk_fn, _createChunk, createChunk_fn, _flushChunks, flushChunks_fn;
+  var StreamTargetWriter = class extends Writer {
+    constructor(target) {
+      super();
+      __privateAdd(this, _writeDataIntoChunks);
+      __privateAdd(this, _insertSectionIntoChunk);
+      __privateAdd(this, _createChunk);
+      __privateAdd(this, _flushChunks);
+      __privateAdd(this, _target2, void 0);
+      __privateAdd(this, _sections, []);
+      __privateAdd(this, _chunked, void 0);
+      __privateAdd(this, _chunkSize, void 0);
+      /**
+       * The data is divided up into fixed-size chunks, whose contents are first filled in RAM and then flushed out.
+       * A chunk is flushed if all of its contents have been written.
+       */
+      __privateAdd(this, _chunks, []);
+      __privateSet(this, _target2, target);
+      __privateSet(this, _chunked, target.options?.chunked ?? false);
+      __privateSet(this, _chunkSize, target.options?.chunkSize ?? DEFAULT_CHUNK_SIZE);
+    }
+    write(data) {
+      __privateGet(this, _sections).push({
+        data: data.slice(),
+        start: this.pos
+      });
+      this.pos += data.byteLength;
+    }
+    flush() {
+      if (__privateGet(this, _sections).length === 0)
+        return;
+      let chunks = [];
+      let sorted = [...__privateGet(this, _sections)].sort((a, b) => a.start - b.start);
+      chunks.push({
+        start: sorted[0].start,
+        size: sorted[0].data.byteLength
+      });
+      for (let i = 1; i < sorted.length; i++) {
+        let lastChunk = chunks[chunks.length - 1];
+        let section = sorted[i];
+        if (section.start <= lastChunk.start + lastChunk.size) {
+          lastChunk.size = Math.max(lastChunk.size, section.start + section.data.byteLength - lastChunk.start);
+        } else {
+          chunks.push({
+            start: section.start,
+            size: section.data.byteLength
+          });
+        }
+      }
+      for (let chunk of chunks) {
+        chunk.data = new Uint8Array(chunk.size);
+        for (let section of __privateGet(this, _sections)) {
+          if (chunk.start <= section.start && section.start < chunk.start + chunk.size) {
+            chunk.data.set(section.data, section.start - chunk.start);
+          }
+        }
+        if (__privateGet(this, _chunked)) {
+          __privateMethod(this, _writeDataIntoChunks, writeDataIntoChunks_fn).call(this, chunk.data, chunk.start);
+          __privateMethod(this, _flushChunks, flushChunks_fn).call(this);
+        } else {
+          __privateGet(this, _target2).options.onData?.(chunk.data, chunk.start);
+        }
+      }
+      __privateGet(this, _sections).length = 0;
+    }
+    finalize() {
+      if (__privateGet(this, _chunked)) {
+        __privateMethod(this, _flushChunks, flushChunks_fn).call(this, true);
+      }
+    }
+  };
+  _target2 = new WeakMap();
+  _sections = new WeakMap();
+  _chunked = new WeakMap();
+  _chunkSize = new WeakMap();
+  _chunks = new WeakMap();
+  _writeDataIntoChunks = new WeakSet();
+  writeDataIntoChunks_fn = function(data, position) {
+    let chunkIndex = __privateGet(this, _chunks).findIndex((x) => x.start <= position && position < x.start + __privateGet(this, _chunkSize));
+    if (chunkIndex === -1)
+      chunkIndex = __privateMethod(this, _createChunk, createChunk_fn).call(this, position);
+    let chunk = __privateGet(this, _chunks)[chunkIndex];
+    let relativePosition = position - chunk.start;
+    let toWrite = data.subarray(0, Math.min(__privateGet(this, _chunkSize) - relativePosition, data.byteLength));
+    chunk.data.set(toWrite, relativePosition);
+    let section = {
+      start: relativePosition,
+      end: relativePosition + toWrite.byteLength
+    };
+    __privateMethod(this, _insertSectionIntoChunk, insertSectionIntoChunk_fn).call(this, chunk, section);
+    if (chunk.written[0].start === 0 && chunk.written[0].end === __privateGet(this, _chunkSize)) {
+      chunk.shouldFlush = true;
+    }
+    if (__privateGet(this, _chunks).length > MAX_CHUNKS_AT_ONCE) {
+      for (let i = 0; i < __privateGet(this, _chunks).length - 1; i++) {
+        __privateGet(this, _chunks)[i].shouldFlush = true;
+      }
+      __privateMethod(this, _flushChunks, flushChunks_fn).call(this);
+    }
+    if (toWrite.byteLength < data.byteLength) {
+      __privateMethod(this, _writeDataIntoChunks, writeDataIntoChunks_fn).call(this, data.subarray(toWrite.byteLength), position + toWrite.byteLength);
+    }
+  };
+  _insertSectionIntoChunk = new WeakSet();
+  insertSectionIntoChunk_fn = function(chunk, section) {
+    let low = 0;
+    let high = chunk.written.length - 1;
+    let index = -1;
+    while (low <= high) {
+      let mid = Math.floor(low + (high - low + 1) / 2);
+      if (chunk.written[mid].start <= section.start) {
+        low = mid + 1;
+        index = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+    chunk.written.splice(index + 1, 0, section);
+    if (index === -1 || chunk.written[index].end < section.start)
+      index++;
+    while (index < chunk.written.length - 1 && chunk.written[index].end >= chunk.written[index + 1].start) {
+      chunk.written[index].end = Math.max(chunk.written[index].end, chunk.written[index + 1].end);
+      chunk.written.splice(index + 1, 1);
+    }
+  };
+  _createChunk = new WeakSet();
+  createChunk_fn = function(includesPosition) {
+    let start = Math.floor(includesPosition / __privateGet(this, _chunkSize)) * __privateGet(this, _chunkSize);
+    let chunk = {
+      start,
+      data: new Uint8Array(__privateGet(this, _chunkSize)),
+      written: [],
+      shouldFlush: false
+    };
+    __privateGet(this, _chunks).push(chunk);
+    __privateGet(this, _chunks).sort((a, b) => a.start - b.start);
+    return __privateGet(this, _chunks).indexOf(chunk);
+  };
+  _flushChunks = new WeakSet();
+  flushChunks_fn = function(force = false) {
+    for (let i = 0; i < __privateGet(this, _chunks).length; i++) {
+      let chunk = __privateGet(this, _chunks)[i];
+      if (!chunk.shouldFlush && !force)
+        continue;
+      for (let section of chunk.written) {
+        __privateGet(this, _target2).options.onData?.(
+          chunk.data.subarray(section.start, section.end),
+          chunk.start + section.start
+        );
+      }
+      __privateGet(this, _chunks).splice(i--, 1);
+    }
+  };
+  var FileSystemWritableFileStreamTargetWriter = class extends StreamTargetWriter {
+    constructor(target) {
+      super(new StreamTarget({
+        onData: (data, position) => target.stream.write({
+          type: "write",
+          data,
+          position
+        }),
+        chunked: true,
+        chunkSize: target.options?.chunkSize
+      }));
+    }
+  };
+
+  // src/muxer.ts
+  var GLOBAL_TIMESCALE = 1e3;
+  var SUPPORTED_VIDEO_CODECS = ["avc", "hevc", "vp9", "av1"];
+  var SUPPORTED_AUDIO_CODECS = ["aac", "opus"];
+  var TIMESTAMP_OFFSET = 2082844800;
+  var FIRST_TIMESTAMP_BEHAVIORS = ["strict", "offset", "cross-track-offset"];
+  var _options, _writer, _ftypSize, _mdat, _videoTrack, _audioTrack, _creationTime, _finalizedChunks, _nextFragmentNumber, _videoSampleQueue, _audioSampleQueue, _finalized, _validateOptions, validateOptions_fn, _writeHeader, writeHeader_fn, _computeMoovSizeUpperBound, computeMoovSizeUpperBound_fn, _prepareTracks, prepareTracks_fn, _generateMpeg4AudioSpecificConfig, generateMpeg4AudioSpecificConfig_fn, _createSampleForTrack, createSampleForTrack_fn, _addSampleToTrack, addSampleToTrack_fn, _validateTimestamp, validateTimestamp_fn, _finalizeCurrentChunk, finalizeCurrentChunk_fn, _finalizeFragment, finalizeFragment_fn, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn, _ensureNotFinalized, ensureNotFinalized_fn;
+  var Muxer = class {
+    constructor(options) {
+      __privateAdd(this, _validateOptions);
+      __privateAdd(this, _writeHeader);
+      __privateAdd(this, _computeMoovSizeUpperBound);
+      __privateAdd(this, _prepareTracks);
+      // https://wiki.multimedia.cx/index.php/MPEG-4_Audio
+      __privateAdd(this, _generateMpeg4AudioSpecificConfig);
+      __privateAdd(this, _createSampleForTrack);
+      __privateAdd(this, _addSampleToTrack);
+      __privateAdd(this, _validateTimestamp);
+      __privateAdd(this, _finalizeCurrentChunk);
+      __privateAdd(this, _finalizeFragment);
+      __privateAdd(this, _maybeFlushStreamingTargetWriter);
+      __privateAdd(this, _ensureNotFinalized);
+      __privateAdd(this, _options, void 0);
+      __privateAdd(this, _writer, void 0);
+      __privateAdd(this, _ftypSize, void 0);
+      __privateAdd(this, _mdat, void 0);
+      __privateAdd(this, _videoTrack, null);
+      __privateAdd(this, _audioTrack, null);
+      __privateAdd(this, _creationTime, Math.floor(Date.now() / 1e3) + TIMESTAMP_OFFSET);
+      __privateAdd(this, _finalizedChunks, []);
+      // Fields for fragmented MP4:
+      __privateAdd(this, _nextFragmentNumber, 1);
+      __privateAdd(this, _videoSampleQueue, []);
+      __privateAdd(this, _audioSampleQueue, []);
+      __privateAdd(this, _finalized, false);
+      __privateMethod(this, _validateOptions, validateOptions_fn).call(this, options);
+      options.video = deepClone(options.video);
+      options.audio = deepClone(options.audio);
+      options.fastStart = deepClone(options.fastStart);
+      this.target = options.target;
+      __privateSet(this, _options, {
+        firstTimestampBehavior: "strict",
+        ...options
+      });
+      if (options.target instanceof ArrayBufferTarget) {
+        __privateSet(this, _writer, new ArrayBufferTargetWriter(options.target));
+      } else if (options.target instanceof StreamTarget) {
+        __privateSet(this, _writer, new StreamTargetWriter(options.target));
+      } else if (options.target instanceof FileSystemWritableFileStreamTarget) {
+        __privateSet(this, _writer, new FileSystemWritableFileStreamTargetWriter(options.target));
+      } else {
+        throw new Error(`Invalid target: ${options.target}`);
+      }
+      __privateMethod(this, _prepareTracks, prepareTracks_fn).call(this);
+      __privateMethod(this, _writeHeader, writeHeader_fn).call(this);
+    }
+    addVideoChunk(sample, meta, timestamp, compositionTimeOffset) {
+      if (!(sample instanceof EncodedVideoChunk)) {
+        throw new TypeError("addVideoChunk's first argument (sample) must be of type EncodedVideoChunk.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addVideoChunk's second argument (meta), when provided, must be an object.");
+      }
+      if (timestamp !== void 0 && (!Number.isFinite(timestamp) || timestamp < 0)) {
+        throw new TypeError(
+          "addVideoChunk's third argument (timestamp), when provided, must be a non-negative real number."
+        );
+      }
+      if (compositionTimeOffset !== void 0 && !Number.isFinite(compositionTimeOffset)) {
+        throw new TypeError(
+          "addVideoChunk's fourth argument (compositionTimeOffset), when provided, must be a real number."
+        );
+      }
+      let data = new Uint8Array(sample.byteLength);
+      sample.copyTo(data);
+      this.addVideoChunkRaw(
+        data,
+        sample.type,
+        timestamp ?? sample.timestamp,
+        sample.duration,
+        meta,
+        compositionTimeOffset
+      );
+    }
+    addVideoChunkRaw(data, type, timestamp, duration, meta, compositionTimeOffset) {
+      if (!(data instanceof Uint8Array)) {
+        throw new TypeError("addVideoChunkRaw's first argument (data) must be an instance of Uint8Array.");
+      }
+      if (type !== "key" && type !== "delta") {
+        throw new TypeError("addVideoChunkRaw's second argument (type) must be either 'key' or 'delta'.");
+      }
+      if (!Number.isFinite(timestamp) || timestamp < 0) {
+        throw new TypeError("addVideoChunkRaw's third argument (timestamp) must be a non-negative real number.");
+      }
+      if (!Number.isFinite(duration) || duration < 0) {
+        throw new TypeError("addVideoChunkRaw's fourth argument (duration) must be a non-negative real number.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addVideoChunkRaw's fifth argument (meta), when provided, must be an object.");
+      }
+      if (compositionTimeOffset !== void 0 && !Number.isFinite(compositionTimeOffset)) {
+        throw new TypeError(
+          "addVideoChunkRaw's sixth argument (compositionTimeOffset), when provided, must be a real number."
+        );
+      }
+      __privateMethod(this, _ensureNotFinalized, ensureNotFinalized_fn).call(this);
+      if (!__privateGet(this, _options).video)
+        throw new Error("No video track declared.");
+      if (typeof __privateGet(this, _options).fastStart === "object" && __privateGet(this, _videoTrack).samples.length === __privateGet(this, _options).fastStart.expectedVideoChunks) {
+        throw new Error(`Cannot add more video chunks than specified in 'fastStart' (${__privateGet(this, _options).fastStart.expectedVideoChunks}).`);
+      }
+      let videoSample = __privateMethod(this, _createSampleForTrack, createSampleForTrack_fn).call(this, __privateGet(this, _videoTrack), data, type, timestamp, duration, meta, compositionTimeOffset);
+      if (__privateGet(this, _options).fastStart === "fragmented" && __privateGet(this, _audioTrack)) {
+        while (__privateGet(this, _audioSampleQueue).length > 0 && __privateGet(this, _audioSampleQueue)[0].decodeTimestamp <= videoSample.decodeTimestamp) {
+          let audioSample = __privateGet(this, _audioSampleQueue).shift();
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+        }
+        if (videoSample.decodeTimestamp <= __privateGet(this, _audioTrack).lastDecodeTimestamp) {
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+        } else {
+          __privateGet(this, _videoSampleQueue).push(videoSample);
+        }
+      } else {
+        __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+      }
+    }
+    addAudioChunk(sample, meta, timestamp) {
+      if (!(sample instanceof EncodedAudioChunk)) {
+        throw new TypeError("addAudioChunk's first argument (sample) must be of type EncodedAudioChunk.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addAudioChunk's second argument (meta), when provided, must be an object.");
+      }
+      if (timestamp !== void 0 && (!Number.isFinite(timestamp) || timestamp < 0)) {
+        throw new TypeError(
+          "addAudioChunk's third argument (timestamp), when provided, must be a non-negative real number."
+        );
+      }
+      let data = new Uint8Array(sample.byteLength);
+      sample.copyTo(data);
+      this.addAudioChunkRaw(data, sample.type, timestamp ?? sample.timestamp, sample.duration, meta);
+    }
+    addAudioChunkRaw(data, type, timestamp, duration, meta) {
+      if (!(data instanceof Uint8Array)) {
+        throw new TypeError("addAudioChunkRaw's first argument (data) must be an instance of Uint8Array.");
+      }
+      if (type !== "key" && type !== "delta") {
+        throw new TypeError("addAudioChunkRaw's second argument (type) must be either 'key' or 'delta'.");
+      }
+      if (!Number.isFinite(timestamp) || timestamp < 0) {
+        throw new TypeError("addAudioChunkRaw's third argument (timestamp) must be a non-negative real number.");
+      }
+      if (!Number.isFinite(duration) || duration < 0) {
+        throw new TypeError("addAudioChunkRaw's fourth argument (duration) must be a non-negative real number.");
+      }
+      if (meta && typeof meta !== "object") {
+        throw new TypeError("addAudioChunkRaw's fifth argument (meta), when provided, must be an object.");
+      }
+      __privateMethod(this, _ensureNotFinalized, ensureNotFinalized_fn).call(this);
+      if (!__privateGet(this, _options).audio)
+        throw new Error("No audio track declared.");
+      if (typeof __privateGet(this, _options).fastStart === "object" && __privateGet(this, _audioTrack).samples.length === __privateGet(this, _options).fastStart.expectedAudioChunks) {
+        throw new Error(`Cannot add more audio chunks than specified in 'fastStart' (${__privateGet(this, _options).fastStart.expectedAudioChunks}).`);
+      }
+      let audioSample = __privateMethod(this, _createSampleForTrack, createSampleForTrack_fn).call(this, __privateGet(this, _audioTrack), data, type, timestamp, duration, meta);
+      if (__privateGet(this, _options).fastStart === "fragmented" && __privateGet(this, _videoTrack)) {
+        while (__privateGet(this, _videoSampleQueue).length > 0 && __privateGet(this, _videoSampleQueue)[0].decodeTimestamp <= audioSample.decodeTimestamp) {
+          let videoSample = __privateGet(this, _videoSampleQueue).shift();
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+        }
+        if (audioSample.decodeTimestamp <= __privateGet(this, _videoTrack).lastDecodeTimestamp) {
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+        } else {
+          __privateGet(this, _audioSampleQueue).push(audioSample);
+        }
+      } else {
+        __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+      }
+    }
+    /** Finalizes the file, making it ready for use. Must be called after all video and audio chunks have been added. */
+    finalize() {
+      if (__privateGet(this, _finalized)) {
+        throw new Error("Cannot finalize a muxer more than once.");
+      }
+      if (__privateGet(this, _options).fastStart === "fragmented") {
+        for (let videoSample of __privateGet(this, _videoSampleQueue))
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _videoTrack), videoSample);
+        for (let audioSample of __privateGet(this, _audioSampleQueue))
+          __privateMethod(this, _addSampleToTrack, addSampleToTrack_fn).call(this, __privateGet(this, _audioTrack), audioSample);
+        __privateMethod(this, _finalizeFragment, finalizeFragment_fn).call(this, false);
+      } else {
+        if (__privateGet(this, _videoTrack))
+          __privateMethod(this, _finalizeCurrentChunk, finalizeCurrentChunk_fn).call(this, __privateGet(this, _videoTrack));
+        if (__privateGet(this, _audioTrack))
+          __privateMethod(this, _finalizeCurrentChunk, finalizeCurrentChunk_fn).call(this, __privateGet(this, _audioTrack));
+      }
+      let tracks = [__privateGet(this, _videoTrack), __privateGet(this, _audioTrack)].filter(Boolean);
+      if (__privateGet(this, _options).fastStart === "in-memory") {
+        let mdatSize;
+        for (let i = 0; i < 2; i++) {
+          let movieBox2 = moov(tracks, __privateGet(this, _creationTime));
+          let movieBoxSize = __privateGet(this, _writer).measureBox(movieBox2);
+          mdatSize = __privateGet(this, _writer).measureBox(__privateGet(this, _mdat));
+          let currentChunkPos = __privateGet(this, _writer).pos + movieBoxSize + mdatSize;
+          for (let chunk of __privateGet(this, _finalizedChunks)) {
+            chunk.offset = currentChunkPos;
+            for (let { data } of chunk.samples) {
+              currentChunkPos += data.byteLength;
+              mdatSize += data.byteLength;
+            }
+          }
+          if (currentChunkPos < 2 ** 32)
+            break;
+          if (mdatSize >= 2 ** 32)
+            __privateGet(this, _mdat).largeSize = true;
+        }
+        let movieBox = moov(tracks, __privateGet(this, _creationTime));
+        __privateGet(this, _writer).writeBox(movieBox);
+        __privateGet(this, _mdat).size = mdatSize;
+        __privateGet(this, _writer).writeBox(__privateGet(this, _mdat));
+        for (let chunk of __privateGet(this, _finalizedChunks)) {
+          for (let sample of chunk.samples) {
+            __privateGet(this, _writer).write(sample.data);
+            sample.data = null;
+          }
+        }
+      } else if (__privateGet(this, _options).fastStart === "fragmented") {
+        let startPos = __privateGet(this, _writer).pos;
+        let mfraBox = mfra(tracks);
+        __privateGet(this, _writer).writeBox(mfraBox);
+        let mfraBoxSize = __privateGet(this, _writer).pos - startPos;
+        __privateGet(this, _writer).seek(__privateGet(this, _writer).pos - 4);
+        __privateGet(this, _writer).writeU32(mfraBoxSize);
+      } else {
+        let mdatPos = __privateGet(this, _writer).offsets.get(__privateGet(this, _mdat));
+        let mdatSize = __privateGet(this, _writer).pos - mdatPos;
+        __privateGet(this, _mdat).size = mdatSize;
+        __privateGet(this, _mdat).largeSize = mdatSize >= 2 ** 32;
+        __privateGet(this, _writer).patchBox(__privateGet(this, _mdat));
+        let movieBox = moov(tracks, __privateGet(this, _creationTime));
+        if (typeof __privateGet(this, _options).fastStart === "object") {
+          __privateGet(this, _writer).seek(__privateGet(this, _ftypSize));
+          __privateGet(this, _writer).writeBox(movieBox);
+          let remainingBytes = mdatPos - __privateGet(this, _writer).pos;
+          __privateGet(this, _writer).writeBox(free(remainingBytes));
+        } else {
+          __privateGet(this, _writer).writeBox(movieBox);
+        }
+      }
+      __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+      __privateGet(this, _writer).finalize();
+      __privateSet(this, _finalized, true);
+    }
+  };
+  _options = new WeakMap();
+  _writer = new WeakMap();
+  _ftypSize = new WeakMap();
+  _mdat = new WeakMap();
+  _videoTrack = new WeakMap();
+  _audioTrack = new WeakMap();
+  _creationTime = new WeakMap();
+  _finalizedChunks = new WeakMap();
+  _nextFragmentNumber = new WeakMap();
+  _videoSampleQueue = new WeakMap();
+  _audioSampleQueue = new WeakMap();
+  _finalized = new WeakMap();
+  _validateOptions = new WeakSet();
+  validateOptions_fn = function(options) {
+    if (typeof options !== "object") {
+      throw new TypeError("The muxer requires an options object to be passed to its constructor.");
+    }
+    if (!(options.target instanceof Target)) {
+      throw new TypeError("The target must be provided and an instance of Target.");
+    }
+    if (options.video) {
+      if (!SUPPORTED_VIDEO_CODECS.includes(options.video.codec)) {
+        throw new TypeError(`Unsupported video codec: ${options.video.codec}`);
+      }
+      if (!Number.isInteger(options.video.width) || options.video.width <= 0) {
+        throw new TypeError(`Invalid video width: ${options.video.width}. Must be a positive integer.`);
+      }
+      if (!Number.isInteger(options.video.height) || options.video.height <= 0) {
+        throw new TypeError(`Invalid video height: ${options.video.height}. Must be a positive integer.`);
+      }
+      const videoRotation = options.video.rotation;
+      if (typeof videoRotation === "number" && ![0, 90, 180, 270].includes(videoRotation)) {
+        throw new TypeError(`Invalid video rotation: ${videoRotation}. Has to be 0, 90, 180 or 270.`);
+      } else if (Array.isArray(videoRotation) && (videoRotation.length !== 9 || videoRotation.some((value) => typeof value !== "number"))) {
+        throw new TypeError(`Invalid video transformation matrix: ${videoRotation.join()}`);
+      }
+      if (options.video.frameRate !== void 0 && (!Number.isInteger(options.video.frameRate) || options.video.frameRate <= 0)) {
+        throw new TypeError(
+          `Invalid video frame rate: ${options.video.frameRate}. Must be a positive integer.`
+        );
+      }
+    }
+    if (options.audio) {
+      if (!SUPPORTED_AUDIO_CODECS.includes(options.audio.codec)) {
+        throw new TypeError(`Unsupported audio codec: ${options.audio.codec}`);
+      }
+      if (!Number.isInteger(options.audio.numberOfChannels) || options.audio.numberOfChannels <= 0) {
+        throw new TypeError(
+          `Invalid number of audio channels: ${options.audio.numberOfChannels}. Must be a positive integer.`
+        );
+      }
+      if (!Number.isInteger(options.audio.sampleRate) || options.audio.sampleRate <= 0) {
+        throw new TypeError(
+          `Invalid audio sample rate: ${options.audio.sampleRate}. Must be a positive integer.`
+        );
+      }
+    }
+    if (options.firstTimestampBehavior && !FIRST_TIMESTAMP_BEHAVIORS.includes(options.firstTimestampBehavior)) {
+      throw new TypeError(`Invalid first timestamp behavior: ${options.firstTimestampBehavior}`);
+    }
+    if (typeof options.fastStart === "object") {
+      if (options.video) {
+        if (options.fastStart.expectedVideoChunks === void 0) {
+          throw new TypeError(`'fastStart' is an object but is missing property 'expectedVideoChunks'.`);
+        } else if (!Number.isInteger(options.fastStart.expectedVideoChunks) || options.fastStart.expectedVideoChunks < 0) {
+          throw new TypeError(`'expectedVideoChunks' must be a non-negative integer.`);
+        }
+      }
+      if (options.audio) {
+        if (options.fastStart.expectedAudioChunks === void 0) {
+          throw new TypeError(`'fastStart' is an object but is missing property 'expectedAudioChunks'.`);
+        } else if (!Number.isInteger(options.fastStart.expectedAudioChunks) || options.fastStart.expectedAudioChunks < 0) {
+          throw new TypeError(`'expectedAudioChunks' must be a non-negative integer.`);
+        }
+      }
+    } else if (![false, "in-memory", "fragmented"].includes(options.fastStart)) {
+      throw new TypeError(`'fastStart' option must be false, 'in-memory', 'fragmented' or an object.`);
+    }
+    if (options.minFragmentDuration !== void 0 && (!Number.isFinite(options.minFragmentDuration) || options.minFragmentDuration < 0)) {
+      throw new TypeError(`'minFragmentDuration' must be a non-negative number.`);
+    }
+  };
+  _writeHeader = new WeakSet();
+  writeHeader_fn = function() {
+    __privateGet(this, _writer).writeBox(ftyp({
+      holdsAvc: __privateGet(this, _options).video?.codec === "avc",
+      fragmented: __privateGet(this, _options).fastStart === "fragmented"
+    }));
+    __privateSet(this, _ftypSize, __privateGet(this, _writer).pos);
+    if (__privateGet(this, _options).fastStart === "in-memory") {
+      __privateSet(this, _mdat, mdat(false));
+    } else if (__privateGet(this, _options).fastStart === "fragmented") {
+    } else {
+      if (typeof __privateGet(this, _options).fastStart === "object") {
+        let moovSizeUpperBound = __privateMethod(this, _computeMoovSizeUpperBound, computeMoovSizeUpperBound_fn).call(this);
+        __privateGet(this, _writer).seek(__privateGet(this, _writer).pos + moovSizeUpperBound);
+      }
+      __privateSet(this, _mdat, mdat(true));
+      __privateGet(this, _writer).writeBox(__privateGet(this, _mdat));
+    }
+    __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+  };
+  _computeMoovSizeUpperBound = new WeakSet();
+  computeMoovSizeUpperBound_fn = function() {
+    if (typeof __privateGet(this, _options).fastStart !== "object")
+      return;
+    let upperBound = 0;
+    let sampleCounts = [
+      __privateGet(this, _options).fastStart.expectedVideoChunks,
+      __privateGet(this, _options).fastStart.expectedAudioChunks
+    ];
+    for (let n of sampleCounts) {
+      if (!n)
+        continue;
+      upperBound += (4 + 4) * Math.ceil(2 / 3 * n);
+      upperBound += 4 * n;
+      upperBound += (4 + 4 + 4) * Math.ceil(2 / 3 * n);
+      upperBound += 4 * n;
+      upperBound += 8 * n;
+    }
+    upperBound += 4096;
+    return upperBound;
+  };
+  _prepareTracks = new WeakSet();
+  prepareTracks_fn = function() {
+    if (__privateGet(this, _options).video) {
+      __privateSet(this, _videoTrack, {
+        id: 1,
+        info: {
+          type: "video",
+          codec: __privateGet(this, _options).video.codec,
+          width: __privateGet(this, _options).video.width,
+          height: __privateGet(this, _options).video.height,
+          rotation: __privateGet(this, _options).video.rotation ?? 0,
+          decoderConfig: null
+        },
+        // The fallback contains many common frame rates as factors
+        timescale: __privateGet(this, _options).video.frameRate ?? 57600,
+        samples: [],
+        finalizedChunks: [],
+        currentChunk: null,
+        firstDecodeTimestamp: void 0,
+        lastDecodeTimestamp: -1,
+        timeToSampleTable: [],
+        compositionTimeOffsetTable: [],
+        lastTimescaleUnits: null,
+        lastSample: null,
+        compactlyCodedChunkTable: []
+      });
+    }
+    if (__privateGet(this, _options).audio) {
+      __privateSet(this, _audioTrack, {
+        id: __privateGet(this, _options).video ? 2 : 1,
+        info: {
+          type: "audio",
+          codec: __privateGet(this, _options).audio.codec,
+          numberOfChannels: __privateGet(this, _options).audio.numberOfChannels,
+          sampleRate: __privateGet(this, _options).audio.sampleRate,
+          decoderConfig: null
+        },
+        timescale: __privateGet(this, _options).audio.sampleRate,
+        samples: [],
+        finalizedChunks: [],
+        currentChunk: null,
+        firstDecodeTimestamp: void 0,
+        lastDecodeTimestamp: -1,
+        timeToSampleTable: [],
+        compositionTimeOffsetTable: [],
+        lastTimescaleUnits: null,
+        lastSample: null,
+        compactlyCodedChunkTable: []
+      });
+      if (__privateGet(this, _options).audio.codec === "aac") {
+        let guessedCodecPrivate = __privateMethod(this, _generateMpeg4AudioSpecificConfig, generateMpeg4AudioSpecificConfig_fn).call(
+          this,
+          2,
+          // Object type for AAC-LC, since it's the most common
+          __privateGet(this, _options).audio.sampleRate,
+          __privateGet(this, _options).audio.numberOfChannels
+        );
+        __privateGet(this, _audioTrack).info.decoderConfig = {
+          codec: __privateGet(this, _options).audio.codec,
+          description: guessedCodecPrivate,
+          numberOfChannels: __privateGet(this, _options).audio.numberOfChannels,
+          sampleRate: __privateGet(this, _options).audio.sampleRate
+        };
+      }
+    }
+  };
+  _generateMpeg4AudioSpecificConfig = new WeakSet();
+  generateMpeg4AudioSpecificConfig_fn = function(objectType, sampleRate, numberOfChannels) {
+    let frequencyIndices = [96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350];
+    let frequencyIndex = frequencyIndices.indexOf(sampleRate);
+    let channelConfig = numberOfChannels;
+    let configBits = "";
+    configBits += objectType.toString(2).padStart(5, "0");
+    configBits += frequencyIndex.toString(2).padStart(4, "0");
+    if (frequencyIndex === 15)
+      configBits += sampleRate.toString(2).padStart(24, "0");
+    configBits += channelConfig.toString(2).padStart(4, "0");
+    let paddingLength = Math.ceil(configBits.length / 8) * 8;
+    configBits = configBits.padEnd(paddingLength, "0");
+    let configBytes = new Uint8Array(configBits.length / 8);
+    for (let i = 0; i < configBits.length; i += 8) {
+      configBytes[i / 8] = parseInt(configBits.slice(i, i + 8), 2);
+    }
+    return configBytes;
+  };
+  _createSampleForTrack = new WeakSet();
+  createSampleForTrack_fn = function(track, data, type, timestamp, duration, meta, compositionTimeOffset) {
+    let presentationTimestampInSeconds = timestamp / 1e6;
+    let decodeTimestampInSeconds = (timestamp - (compositionTimeOffset ?? 0)) / 1e6;
+    let durationInSeconds = duration / 1e6;
+    let adjusted = __privateMethod(this, _validateTimestamp, validateTimestamp_fn).call(this, presentationTimestampInSeconds, decodeTimestampInSeconds, track);
+    presentationTimestampInSeconds = adjusted.presentationTimestamp;
+    decodeTimestampInSeconds = adjusted.decodeTimestamp;
+    if (meta?.decoderConfig) {
+      if (track.info.decoderConfig === null) {
+        track.info.decoderConfig = meta.decoderConfig;
+      } else {
+        Object.assign(track.info.decoderConfig, meta.decoderConfig);
+      }
+    }
+    let sample = {
+      presentationTimestamp: presentationTimestampInSeconds,
+      decodeTimestamp: decodeTimestampInSeconds,
+      duration: durationInSeconds,
+      data,
+      size: data.byteLength,
+      type,
+      // Will be refined once the next sample comes in
+      timescaleUnitsToNextSample: intoTimescale(durationInSeconds, track.timescale)
+    };
+    return sample;
+  };
+  _addSampleToTrack = new WeakSet();
+  addSampleToTrack_fn = function(track, sample) {
+    if (__privateGet(this, _options).fastStart !== "fragmented") {
+      track.samples.push(sample);
+    }
+    const sampleCompositionTimeOffset = intoTimescale(sample.presentationTimestamp - sample.decodeTimestamp, track.timescale);
+    if (track.lastTimescaleUnits !== null) {
+      let timescaleUnits = intoTimescale(sample.decodeTimestamp, track.timescale, false);
+      let delta = Math.round(timescaleUnits - track.lastTimescaleUnits);
+      track.lastTimescaleUnits += delta;
+      track.lastSample.timescaleUnitsToNextSample = delta;
+      if (__privateGet(this, _options).fastStart !== "fragmented") {
+        let lastTableEntry = last(track.timeToSampleTable);
+        if (lastTableEntry.sampleCount === 1) {
+          lastTableEntry.sampleDelta = delta;
+          lastTableEntry.sampleCount++;
+        } else if (lastTableEntry.sampleDelta === delta) {
+          lastTableEntry.sampleCount++;
+        } else {
+          lastTableEntry.sampleCount--;
+          track.timeToSampleTable.push({
+            sampleCount: 2,
+            sampleDelta: delta
+          });
+        }
+        const lastCompositionTimeOffsetTableEntry = last(track.compositionTimeOffsetTable);
+        if (lastCompositionTimeOffsetTableEntry.sampleCompositionTimeOffset === sampleCompositionTimeOffset) {
+          lastCompositionTimeOffsetTableEntry.sampleCount++;
+        } else {
+          track.compositionTimeOffsetTable.push({
+            sampleCount: 1,
+            sampleCompositionTimeOffset
+          });
+        }
+      }
+    } else {
+      track.lastTimescaleUnits = 0;
+      if (__privateGet(this, _options).fastStart !== "fragmented") {
+        track.timeToSampleTable.push({
+          sampleCount: 1,
+          sampleDelta: intoTimescale(sample.duration, track.timescale)
+        });
+        track.compositionTimeOffsetTable.push({
+          sampleCount: 1,
+          sampleCompositionTimeOffset
+        });
+      }
+    }
+    track.lastSample = sample;
+    let beginNewChunk = false;
+    if (!track.currentChunk) {
+      beginNewChunk = true;
+    } else {
+      let currentChunkDuration = sample.presentationTimestamp - track.currentChunk.startTimestamp;
+      if (__privateGet(this, _options).fastStart === "fragmented") {
+        let mostImportantTrack = __privateGet(this, _videoTrack) ?? __privateGet(this, _audioTrack);
+        const chunkDuration = __privateGet(this, _options).minFragmentDuration ?? 1;
+        if (track === mostImportantTrack && sample.type === "key" && currentChunkDuration >= chunkDuration) {
+          beginNewChunk = true;
+          __privateMethod(this, _finalizeFragment, finalizeFragment_fn).call(this);
+        }
+      } else {
+        beginNewChunk = currentChunkDuration >= 0.5;
+      }
+    }
+    if (beginNewChunk) {
+      if (track.currentChunk) {
+        __privateMethod(this, _finalizeCurrentChunk, finalizeCurrentChunk_fn).call(this, track);
+      }
+      track.currentChunk = {
+        startTimestamp: sample.presentationTimestamp,
+        samples: []
+      };
+    }
+    track.currentChunk.samples.push(sample);
+  };
+  _validateTimestamp = new WeakSet();
+  validateTimestamp_fn = function(presentationTimestamp, decodeTimestamp, track) {
+    const strictTimestampBehavior = __privateGet(this, _options).firstTimestampBehavior === "strict";
+    const noLastDecodeTimestamp = track.lastDecodeTimestamp === -1;
+    const timestampNonZero = decodeTimestamp !== 0;
+    if (strictTimestampBehavior && noLastDecodeTimestamp && timestampNonZero) {
+      throw new Error(
+        `The first chunk for your media track must have a timestamp of 0 (received DTS=${decodeTimestamp}).Non-zero first timestamps are often caused by directly piping frames or audio data from a MediaStreamTrack into the encoder. Their timestamps are typically relative to the age of thedocument, which is probably what you want.
+
+If you want to offset all timestamps of a track such that the first one is zero, set firstTimestampBehavior: 'offset' in the options.
+`
+      );
+    } else if (__privateGet(this, _options).firstTimestampBehavior === "offset" || __privateGet(this, _options).firstTimestampBehavior === "cross-track-offset") {
+      if (track.firstDecodeTimestamp === void 0) {
+        track.firstDecodeTimestamp = decodeTimestamp;
+      }
+      let baseDecodeTimestamp;
+      if (__privateGet(this, _options).firstTimestampBehavior === "offset") {
+        baseDecodeTimestamp = track.firstDecodeTimestamp;
+      } else {
+        baseDecodeTimestamp = Math.min(
+          __privateGet(this, _videoTrack)?.firstDecodeTimestamp ?? Infinity,
+          __privateGet(this, _audioTrack)?.firstDecodeTimestamp ?? Infinity
+        );
+      }
+      decodeTimestamp -= baseDecodeTimestamp;
+      presentationTimestamp -= baseDecodeTimestamp;
+    }
+    if (decodeTimestamp < track.lastDecodeTimestamp) {
+      throw new Error(
+        `Timestamps must be monotonically increasing (DTS went from ${track.lastDecodeTimestamp * 1e6} to ${decodeTimestamp * 1e6}).`
+      );
+    }
+    track.lastDecodeTimestamp = decodeTimestamp;
+    return { presentationTimestamp, decodeTimestamp };
+  };
+  _finalizeCurrentChunk = new WeakSet();
+  finalizeCurrentChunk_fn = function(track) {
+    if (__privateGet(this, _options).fastStart === "fragmented") {
+      throw new Error("Can't finalize individual chunks if 'fastStart' is set to 'fragmented'.");
+    }
+    if (!track.currentChunk)
+      return;
+    track.finalizedChunks.push(track.currentChunk);
+    __privateGet(this, _finalizedChunks).push(track.currentChunk);
+    if (track.compactlyCodedChunkTable.length === 0 || last(track.compactlyCodedChunkTable).samplesPerChunk !== track.currentChunk.samples.length) {
+      track.compactlyCodedChunkTable.push({
+        firstChunk: track.finalizedChunks.length,
+        // 1-indexed
+        samplesPerChunk: track.currentChunk.samples.length
+      });
+    }
+    if (__privateGet(this, _options).fastStart === "in-memory") {
+      track.currentChunk.offset = 0;
+      return;
+    }
+    track.currentChunk.offset = __privateGet(this, _writer).pos;
+    for (let sample of track.currentChunk.samples) {
+      __privateGet(this, _writer).write(sample.data);
+      sample.data = null;
+    }
+    __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+  };
+  _finalizeFragment = new WeakSet();
+  finalizeFragment_fn = function(flushStreamingWriter = true) {
+    if (__privateGet(this, _options).fastStart !== "fragmented") {
+      throw new Error("Can't finalize a fragment unless 'fastStart' is set to 'fragmented'.");
+    }
+    let tracks = [__privateGet(this, _videoTrack), __privateGet(this, _audioTrack)].filter((track) => track && track.currentChunk);
+    if (tracks.length === 0)
+      return;
+    let fragmentNumber = __privateWrapper(this, _nextFragmentNumber)._++;
+    if (fragmentNumber === 1) {
+      let movieBox = moov(tracks, __privateGet(this, _creationTime), true);
+      __privateGet(this, _writer).writeBox(movieBox);
+    }
+    let moofOffset = __privateGet(this, _writer).pos;
+    let moofBox = moof(fragmentNumber, tracks);
+    __privateGet(this, _writer).writeBox(moofBox);
+    {
+      let mdatBox = mdat(false);
+      let totalTrackSampleSize = 0;
+      for (let track of tracks) {
+        for (let sample of track.currentChunk.samples) {
+          totalTrackSampleSize += sample.size;
+        }
+      }
+      let mdatSize = __privateGet(this, _writer).measureBox(mdatBox) + totalTrackSampleSize;
+      if (mdatSize >= 2 ** 32) {
+        mdatBox.largeSize = true;
+        mdatSize = __privateGet(this, _writer).measureBox(mdatBox) + totalTrackSampleSize;
+      }
+      mdatBox.size = mdatSize;
+      __privateGet(this, _writer).writeBox(mdatBox);
+    }
+    for (let track of tracks) {
+      track.currentChunk.offset = __privateGet(this, _writer).pos;
+      track.currentChunk.moofOffset = moofOffset;
+      for (let sample of track.currentChunk.samples) {
+        __privateGet(this, _writer).write(sample.data);
+        sample.data = null;
+      }
+    }
+    let endPos = __privateGet(this, _writer).pos;
+    __privateGet(this, _writer).seek(__privateGet(this, _writer).offsets.get(moofBox));
+    let newMoofBox = moof(fragmentNumber, tracks);
+    __privateGet(this, _writer).writeBox(newMoofBox);
+    __privateGet(this, _writer).seek(endPos);
+    for (let track of tracks) {
+      track.finalizedChunks.push(track.currentChunk);
+      __privateGet(this, _finalizedChunks).push(track.currentChunk);
+      track.currentChunk = null;
+    }
+    if (flushStreamingWriter) {
+      __privateMethod(this, _maybeFlushStreamingTargetWriter, maybeFlushStreamingTargetWriter_fn).call(this);
+    }
+  };
+  _maybeFlushStreamingTargetWriter = new WeakSet();
+  maybeFlushStreamingTargetWriter_fn = function() {
+    if (__privateGet(this, _writer) instanceof StreamTargetWriter) {
+      __privateGet(this, _writer).flush();
+    }
+  };
+  _ensureNotFinalized = new WeakSet();
+  ensureNotFinalized_fn = function() {
+    if (__privateGet(this, _finalized)) {
+      throw new Error("Cannot add new video or audio chunks after the file has been finalized.");
+    }
+  };
+  return __toCommonJS(src_exports);
+})();
+if (typeof module === "object" && typeof module.exports === "object") Object.assign(module.exports, Mp4Muxer)
+
+</script>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================ CORE ============================ */
+const W = 1080, H9 = 1920, H1 = 1080;
+const C = {
+  base0:'#0A0E27', base1:'#1A1F4D',
+  hero:'#FFFAF0', ink:'#F3ECDB', inkSoft:'#D9CFB6', muted:'#8B92B8',
+  gold:'#D4AF37', goldHi:'#F0CF6B', goldDeep:'#9C7A1E',
+  krishna0:'#0C1647', krishna1:'#26408C', green:'#1F7A36', greenHi:'#74E07C'
+};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const DEV=['१','२','३','४','५','६','७','८'];
+const ABCD=['A','B','C','D'];
+const devNum=n=>String(n).split('').map(d=>'०१२३४५६७८९'[+d]||d).join('');
+
+const cv = document.getElementById('card');
+const ctx = cv.getContext('2d');
+const vcv = document.createElement('canvas'); vcv.width=W; vcv.height=H9;
+const vctx = vcv.getContext('2d');
+
+/* font helpers (size only; family+weight baked) */
+const fDev =(c,s)=>c.font=`400 ${Math.round(s)}px 'Tiro Devanagari Sanskrit'`;
+const fEng =(c,s)=>c.font=`400 ${Math.round(s)}px 'EB Garamond'`;
+const fEngI=(c,s)=>c.font=`italic 400 ${Math.round(s)}px 'EB Garamond'`;
+const fLab =(c,s)=>c.font=`700 ${Math.round(s)}px 'Philosopher'`;
+
+/* Devanagari-safe wrapping (whole-word, never per-glyph) */
+function wrapLines(c, text, maxw){
+  text=(text||'').replace(/\s+/g,' ').trim(); if(!text) return [];
+  const words=text.split(' '); const out=[]; let line='';
+  for(const w of words){ const t=line?line+' '+w:w;
+    if(c.measureText(t).width>maxw && line){ out.push(line); line=w; } else line=t; }
+  if(line) out.push(line); return out;
+}
+/* the ONE safe way we draw text: measure each line, place by its own width. */
+function drawLinesCentered(c, lines, cx, yTop, size, lh, color, shadow){
+  c.textAlign='left'; c.textBaseline='alphabetic'; c.fillStyle=color;
+  lines.forEach((ln,i)=>{
+    const w=c.measureText(ln).width; const x=cx-w/2; const y=yTop+size*0.82+i*lh;
+    if(shadow){ c.save(); c.shadowColor='rgba(0,0,0,0.5)'; c.shadowBlur=14; c.shadowOffsetY=2;
+      c.fillText(ln,x,y); c.restore(); }
+    else c.fillText(ln,x,y);
+  });
+}
+function centerOne(c, text, cx, y, color){ // single line, plain
+  const w=c.measureText(text).width; c.textAlign='left'; c.fillStyle=color; c.fillText(text, cx-w/2, y);
+}
+
+/* ---------- background ---------- */
+function mulberry(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function godRays(c,W,H){ c.save(); c.translate(W/2,-H*0.05); c.globalCompositeOperation='lighter';
+  for(let i=-3;i<=3;i++){ const ang=i*0.13; c.save(); c.rotate(ang);
+    const g=c.createLinearGradient(0,0,0,H*0.9); g.addColorStop(0,'rgba(240,207,107,0.07)'); g.addColorStop(1,'rgba(240,207,107,0)');
+    c.fillStyle=g; c.beginPath(); c.moveTo(-6,0); c.lineTo(6,0); c.lineTo(80,H*0.9); c.lineTo(-80,H*0.9); c.closePath(); c.fill(); c.restore(); }
+  c.restore(); }
+function starfield(c,W,H,type){ const r=mulberry(1000+(type?type.length:0)); c.save();
+  const n=Math.round(W*H/14000);
+  for(let i=0;i<n;i++){ const x=r()*W, y=r()*H, rad=r()*1.8+0.4, a=0.10+r()*0.5;
+    c.beginPath(); c.fillStyle=r()>0.5?`rgba(255,246,224,${a})`:`rgba(212,175,55,${a})`; c.arc(x,y,rad,0,Math.PI*2); c.fill(); }
+  c.restore(); }
+function ringMotif(c,cx,cy,R,spokes){ c.save(); c.translate(cx,cy); c.strokeStyle='rgba(212,175,55,0.07)'; c.lineWidth=2;
+  c.beginPath(); c.arc(0,0,R,0,Math.PI*2); c.stroke(); c.beginPath(); c.arc(0,0,R*0.62,0,Math.PI*2); c.stroke();
+  if(spokes){ for(let i=0;i<spokes;i++){ c.beginPath(); c.rotate(Math.PI*2/spokes); c.moveTo(0,R*0.62); c.lineTo(0,R); c.stroke(); } } c.restore(); }
+function lotusMotif(c,cx,cy,R){ c.save(); c.translate(cx,cy); c.strokeStyle='rgba(212,175,55,0.07)'; c.lineWidth=2.4;
+  for(let i=0;i<12;i++){ c.rotate(Math.PI/6); c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(R*0.32,-R*0.7,0,-R); c.quadraticCurveTo(-R*0.32,-R*0.7,0,0); c.stroke(); } c.restore(); }
+function glyphMotif(c,cx,cy,glyph,size){ c.save(); fDev(c,size); c.textAlign='left'; const w=c.measureText(glyph).width;
+  c.fillStyle='rgba(240,207,107,0.06)'; c.fillText(glyph,cx-w/2,cy+size*0.34); c.restore(); }
+function yantraMotif(c,cx,cy,R){ c.save(); c.translate(cx,cy); c.strokeStyle='rgba(212,175,55,0.07)'; c.lineWidth=2;
+  const tri=(up)=>{ c.beginPath(); for(let i=0;i<3;i++){ const a=(up?-Math.PI/2:Math.PI/2)+i*2*Math.PI/3; const x=Math.cos(a)*R, y=Math.sin(a)*R; i?c.lineTo(x,y):c.moveTo(x,y); } c.closePath(); c.stroke(); };
+  tri(true); tri(false); c.beginPath(); c.arc(0,0,R*1.12,0,Math.PI*2); c.stroke(); c.restore(); }
+function motif(c,W,H,type){ const cx=W/2, cy=H*0.45, R=W*0.34;
+  if(type==='mantra') glyphMotif(c,cx,cy,'ॐ',W*0.62);
+  else if(type==='gita') ringMotif(c,cx,cy,R,16);
+  else if(type==='gyan'||type==='prashna'||type==='carousel') lotusMotif(c,cx,cy,R);
+  else if(type==='rashifal') ringMotif(c,cx,cy,R,12);
+  else if(type==='tathya') yantraMotif(c,cx,cy,R*0.8);
+  else if(type==='upaya') glyphMotif(c,cx,cy,'🪔',W*0.42);
+  else ringMotif(c,cx,cy,R,8); }
+function paintBase(c,W,H,type){ const krishna=(type==='gita');
+  const g=c.createLinearGradient(0,0,0,H);
+  if(krishna){ g.addColorStop(0,C.krishna0); g.addColorStop(.55,'#16286A'); g.addColorStop(1,C.krishna1); }
+  else { g.addColorStop(0,'#070B22'); g.addColorStop(.5,'#121739'); g.addColorStop(1,'#1C2250'); }
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  godRays(c,W,H); starfield(c,W,H,type); motif(c,W,H,type);
+  const top=c.createLinearGradient(0,0,0,H*0.24); top.addColorStop(0,'rgba(0,0,0,0.30)'); top.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=top; c.fillRect(0,0,W,H*0.24);
+  const bot=c.createLinearGradient(0,H*0.74,0,H); bot.addColorStop(0,'rgba(0,0,0,0)'); bot.addColorStop(1,'rgba(0,0,0,0.42)');
+  c.fillStyle=bot; c.fillRect(0,H*0.74,W,H*0.26);
+  ornateBorder(c,W,H);
+}
+function ornateBorder(c,W,H){
+  const m=44; c.save();
+  c.strokeStyle='rgba(212,175,55,0.50)'; c.lineWidth=2.6; c.strokeRect(m,m,W-2*m,H-2*m);
+  c.strokeStyle='rgba(212,175,55,0.26)'; c.lineWidth=1.4; c.strokeRect(m+11,m+11,W-2*m-22,H-2*m-22);
+  [[m,m],[W-m,m],[m,H-m],[W-m,H-m]].forEach(p=>{ c.save(); c.translate(p[0],p[1]); c.rotate(Math.PI/4); c.fillStyle=C.gold; c.fillRect(-9,-9,18,18); c.strokeStyle='rgba(255,246,224,0.5)'; c.lineWidth=1; c.strokeRect(-9,-9,18,18); c.restore(); });
+  c.restore();
+}
+function chakra(c,cx,cy,R,glow){
+  c.save(); c.translate(cx,cy);
+  if(glow){ c.shadowColor='rgba(240,207,107,0.6)'; c.shadowBlur=28; }
+  c.strokeStyle=C.goldHi; c.lineWidth=3.2;
+  c.beginPath(); c.arc(0,0,R,0,Math.PI*2); c.stroke();
+  c.shadowBlur=0;
+  c.beginPath(); c.arc(0,0,R*0.30,0,Math.PI*2); c.stroke();
+  c.strokeStyle=C.gold; c.lineWidth=2.2;
+  for(let i=0;i<8;i++){ c.beginPath(); c.rotate(Math.PI/4); c.moveTo(0,R*0.30); c.lineTo(0,R); c.stroke(); }
+  c.restore();
+}
+function diamond(c,cx,cy,sz){ c.save(); c.translate(cx,cy); c.rotate(Math.PI/4); c.fillStyle=C.gold; c.fillRect(-sz/2,-sz/2,sz,sz); c.restore(); }
+function footer(c,W,H){ fLab(c,27); centerOne(c,'विधि चक्र    ·    @vidhichakra', W/2, H-66, 'rgba(240,207,107,0.62)'); }
+
+/* header: chakra crown + gold label flanked by rules (no letter-spacing) */
+function headBlocks(c,label,s,R){
+  R=(R||50)*s;
+  return [
+    {gap:0,h:R*2,draw:(cx,y)=>chakra(c,cx,y+R,R,true)},
+    {gap:42*s,h:40*s,draw:(cx,y)=>{
+      fLab(c,36*s); const w=c.measureText(label).width;
+      c.fillStyle=C.gold; c.textAlign='left'; c.fillText(label, cx-w/2, y+32*s);
+      c.strokeStyle='rgba(212,175,55,.55)'; c.lineWidth=1.6*s; const g=26*s, ln=58*s, yy=y+18*s;
+      c.beginPath(); c.moveTo(cx-w/2-g-ln,yy); c.lineTo(cx-w/2-g,yy); c.stroke();
+      c.beginPath(); c.moveTo(cx+w/2+g,yy); c.lineTo(cx+w/2+g+ln,yy); c.stroke();
+    }}
+  ];
+}
+/* hero (focal) — bright near-white, big, soft shadow, optional gold underline accent */
+function heroBlock(c,text,s,size,gap,maxwFrac,color,underline){
+  const maxw=W*(maxwFrac||0.84); fDev(c,size*s); const lines=wrapLines(c,text,maxw); const font=c.font; const lh=size*s*1.16;
+  const uh=underline?40*s:0;
+  return {gap:gap||0,h:lines.length*lh+uh,draw:(cx,y)=>{ c.font=font; drawLinesCentered(c,lines,cx,y,size*s,lh,color||C.hero,true);
+    if(underline){ const uy=y+lines.length*lh+18*s; c.save(); c.strokeStyle='rgba(212,175,55,0.62)'; c.lineWidth=3*s; const uw=170*s;
+      c.beginPath(); c.moveTo(cx-uw/2,uy); c.lineTo(cx-24*s,uy); c.stroke(); c.beginPath(); c.moveTo(cx+24*s,uy); c.lineTo(cx+uw/2,uy); c.stroke();
+      diamond(c,cx,uy,12*s); c.restore(); } }};
+}
+/* supporting body text */
+function bodyBlock(c,text,s,size,gap,color,maxwFrac){
+  const maxw=W*(maxwFrac||0.82); fDev(c,size*s); const lines=wrapLines(c,text,maxw); const font=c.font; const lh=size*s*1.34;
+  return {gap:gap||0,h:lines.length*lh,draw:(cx,y)=>{ c.font=font; drawLinesCentered(c,lines,cx,y,size*s,lh,color||C.inkSoft,false); }};
+}
+/* multi-line verbatim (mantra/shloka, keep \n) bright */
+function verseBlock(c,text,s,size,gap,color){
+  const ls=(text||'').split('\n').map(x=>x.trim()).filter(Boolean); fDev(c,size*s); const font=c.font; const lh=size*s*1.28;
+  return {gap:gap||0,h:ls.length*lh,draw:(cx,y)=>{ c.font=font; drawLinesCentered(c,ls,cx,y,size*s,lh,color||'#FFF6E0',true); }};
+}
+function ruleBlock(s,gap){ return {gap:gap||0,h:14*s,draw:(cx,y)=>diamond(ctxRef,cx,y+7*s,14*s)}; }
+let ctxRef=ctx; // diamond uses active ctx; set before render
+
+/* numbered list block (points/steps) */
+function listBlocks(c,items,s,size,gapBefore){
+  const colW=W*0.74, colL=(W-colW)/2; const out=[]; const lh=size*s*1.3;
+  (items||[]).slice(0,5).forEach((p,i)=>{
+    fDev(c,size*s); const lines=wrapLines(c,p,colW-72*s); const font=c.font;
+    out.push({gap:i===0?gapBefore:30*s,h:lines.length*lh,draw:(cx,y)=>{
+      c.font=font; c.textAlign='left';
+      c.fillStyle=C.goldHi; c.fillText(DEV[i]||(i+1), colL-58*s, y+size*s*0.82);
+      c.fillStyle=C.ink; lines.forEach((ln,j)=>c.fillText(ln, colL, y+size*s*0.82+j*lh));
+    }});
+  });
+  return out;
+}
+
+/* ---------- fit + render ---------- */
+function fitAndRender(c,W,H,topF,botF,buildFn,opt){
+  ctxRef=c; opt=opt||{}; const reveal=opt.reveal==null?1:opt.reveal; const dy=opt.dy||0;
+  const top=H*topF, bot=H*(1-botF), avail=bot-top;
+  let s=1, b=buildFn(s);
+  if(b.total>avail){ s=Math.max(0.56, avail/b.total); b=buildFn(s);
+    if(b.total>avail){ s=Math.max(0.5, s*avail/b.total); b=buildFn(s); } }
+  let y=top + Math.max(0,(avail-b.total))/2;
+  c.save(); c.globalAlpha=clamp(reveal,0,1); c.translate(0,dy);
+  for(const bl of b.blocks){ y+=bl.gap||0; bl.draw(W/2,y,s); y+=bl.h; }
+  c.restore();
+}
+function assemble(parts){ const blocks=[].concat.apply([],parts); let total=0; blocks.forEach(b=>total+=(b.gap||0)+b.h); return {blocks,total}; }
+
+/* ============================ CARD TYPES ============================ */
+const CARDS={};
+
+CARDS.gyan={ id:'gyan', label:'ज्ञान', animatable:true,
+  sample:()=>({heading:'घरमा किन तुलसी राख्ने?',points:['तुलसीले घरको वायु शुद्ध गरी सकारात्मक ऊर्जा ल्याउँछ।','बिहान तुलसीलाई जल चढाउँदा मन शान्त रहन्छ।','तुलसीको पातले रोगप्रतिरोधक क्षमता बढाउँछ।','साँझमा तुलसीनेर दीप बाल्नु शुभ मानिन्छ।'],source:'स्रोत: स्कन्द पुराण'}),
+  build(c,d,s){ return assemble([ headBlocks(c,'ज्ञान',s),
+    [heroBlock(c,d.heading,s,82,44,0.84,C.hero,true)],
+    [ruleBlock(s,34*s)], listBlocks(c,d.points,s,42,30*s),
+    d.source?[bodyBlock(c,d.source,s,30,44*s,C.muted,0.8)]:[] ]); },
+  prompt:()=>`तपाईं नेपाली ज्योतिषी हुनुहुन्छ। फेसबुकका लागि "ज्ञान" कार्ड बनाउनुहोस्, नेपालीमा यो ढाँचामा:\nशीर्षक: <छोटो आकर्षक शीर्षक>\nबुँदा: <बुँदा १>\nबुँदा: <बुँदा २>\nबुँदा: <बुँदा ३>\nबुँदा: <बुँदा ४>\nस्रोत: <ग्रन्थ/स्रोत>\nबुँदा छोटो (१-२ वाक्य) राख्नुहोस्।`,
+  parse(t){const d={points:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/शीर्षक/.test(k))d.heading=v;else if(/बुँदा|बुदा|point/i.test(k))d.points.push(v);else if(/स्रोत|source/i.test(k))d.source=v;});return d;},
+  caption:d=>`${d.heading||'आजको ज्ञान'} 🙏\n\n${(d.points||[]).map((p,i)=>(DEV[i]||i+1)+'. '+p).join('\n')}\n\n${d.source||''}\n\nयस्ता आध्यात्मिक ज्ञान दैनिक पाउन Follow गर्नुहोस् 🪔 कुन बुँदा मन पर्‍यो? Comment गर्नुहोस्, Save गर्न नबिर्सनुहोस्।\n\n#सनातनधर्म #ज्योतिष #VidhiChakra #SanatanDharma #Nepal #VedicWisdom` };
+
+CARDS.upaya={ id:'upaya', label:'उपाय', animatable:true,
+  sample:()=>({problem:'घरमा अशान्ति र आर्थिक बाधा?',steps:['प्रत्येक शुक्रबार बिहान घरको मूल ढोका सफा गर्नुहोस्।','लक्ष्मीको अगाडि घिउको दीप बाल्नुहोस्।','"ॐ श्रीं ह्रीं श्रीं" मन्त्र १०८ पटक जप गर्नुहोस्।'],note:'श्रद्धा र नियमितताले मात्र उपाय फलदायी हुन्छ।'}),
+  build(c,d,s){ return assemble([ headBlocks(c,'उपाय',s),
+    [heroBlock(c,d.problem,s,70,42,0.84,C.hero,true)], [ruleBlock(s,32*s)], listBlocks(c,d.steps,s,40,30*s),
+    d.note?[bodyBlock(c,d.note,s,32,42*s,C.muted,0.8)]:[] ]); },
+  prompt:()=>`नेपाली ज्योतिषी भएर "उपाय" कार्ड बनाउनुहोस्, नेपालीमा:\nसमस्या: <समस्या>\nउपाय: <चरण १>\nउपाय: <चरण २>\nउपाय: <चरण ३>\nनोट: <सावधानी/सुझाव>`,
+  parse(t){const d={steps:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/समस्या|problem/i.test(k))d.problem=v;else if(/उपाय|step/i.test(k))d.steps.push(v);else if(/नोट|note/i.test(k))d.note=v;});return d;},
+  caption:d=>`${d.problem||'जीवनको बाधा हटाउने उपाय'} 🪔\n\n${(d.steps||[]).map((p,i)=>(DEV[i]||i+1)+'. '+p).join('\n')}\n\n${d.note||''}\n\nयो उपाय प्रियजनलाई Share गर्नुहोस्, पेज Follow गर्नुहोस्। कस्तो लाग्यो? Comment 🙏\n\n#वैदिकउपाय #ज्योतिष #VidhiChakra #SanatanDharma #Nepal #VedicRemedy` };
+
+CARDS.prashna={ id:'prashna', label:'प्रश्न', animatable:true,
+  sample:()=>({question:'मृत्युपछि आत्माको के हुन्छ?',answer:'गीता अनुसार आत्मा अमर छ। जसरी मानिसले पुराना वस्त्र फालेर नयाँ धारण गर्छ, त्यसरी नै आत्माले पुरानो शरीर त्यागेर नयाँ धारण गर्छ। आत्मालाई न आगोले जलाउन सक्छ, न पानीले भिजाउन।'}),
+  build(c,d,s){ return assemble([ headBlocks(c,'प्रश्न',s),
+    [heroBlock(c,d.question,s,74,40,0.84,C.hero,true)], [ruleBlock(s,36*s)], [bodyBlock(c,d.answer,s,44,34*s,C.ink)] ]); },
+  prompt:()=>`नेपाली ज्योतिषी भएर "प्रश्न-उत्तर" कार्ड बनाउनुहोस्, नेपालीमा:\nप्रश्न: <आध्यात्मिक/ज्योतिषीय प्रश्न>\nउत्तर: <२-४ वाक्यको स्पष्ट उत्तर>`,
+  parse(t){const d={};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/प्रश्न|question/i.test(k))d.question=v;else if(/उत्तर|answer/i.test(k))d.answer=v;});return d;},
+  caption:d=>`${d.question||'आजको प्रश्न'} 🤔\n\n${d.answer||''}\n\nतपाईंको विचार के छ? Comment 👇 यस्ता उत्तरका लागि Follow र Save गर्नुहोस्।\n\n#सनातनधर्म #गीता #VidhiChakra #Nepal #SanatanDharma` };
+
+CARDS.mantra={ id:'mantra', label:'मन्त्र', animatable:true,
+  sample:()=>({mantra:'ॐ त्र्यम्बकं यजामहे\nसुगन्धिं पुष्टिवर्धनम्।\nउर्वारुकमिव बन्धनान्\nमृत्योर्मुक्षीय मामृतात्॥',meaning:'हे त्रिनेत्रधारी शिव, हामी तपाईंको पूजा गर्छौं। जसरी पाकेको काँक्रो बोटबाट सजिलै छुट्छ, त्यसरी नै हामीलाई मृत्युको बन्धनबाट मुक्त गरी अमरत्व प्रदान गर्नुहोस्।'}),
+  build(c,d,s){ return assemble([ headBlocks(c,'मन्त्र',s),
+    [verseBlock(c,d.mantra,s,54,42*s,C.goldHi)], [ruleBlock(s,34*s)], [bodyBlock(c,d.meaning,s,40,32*s,C.ink)] ]); },
+  prompt:()=>`नेपाली ज्योतिषी भएर "मन्त्र" कार्ड बनाउनुहोस्:\nमन्त्र: <संस्कृत मन्त्र, हरेक पंक्ति नयाँ लाइनमा>\nअर्थ: <नेपालीमा सरल अर्थ>`,
+  parse(t){const d={};const mm=t.match(/मन्त्र\s*:([\s\S]*?)(?:अर्थ\s*:|$)/);const am=t.match(/अर्थ\s*:([\s\S]*)/);if(mm)d.mantra=mm[1].trim();if(am)d.meaning=am[1].trim();return d;},
+  caption:d=>`आजको मन्त्र 🕉️\n\n${(d.mantra||'').replace(/\n/g,' ')}\n\nअर्थ: ${d.meaning||''}\n\nयो मन्त्र दिनको ३ पटक जप गर्नुहोस्। Save गर्नुहोस्, दैनिक मन्त्रका लागि Follow गर्नुहोस् 🙏\n\n#मन्त्र #Mantra #VidhiChakra #SanatanDharma #Shiva #Nepal` };
+
+CARDS.rashifal={ id:'rashifal', label:'राशिफल', animatable:true,
+  sample:()=>({sign:'मेष राशि',prediction:'आज आत्मविश्वास उच्च रहनेछ। कार्यक्षेत्रमा नयाँ अवसर आउन सक्छ। आर्थिक मामिलामा सावधानी अपनाउनुहोस्। साँझ परिवारसँग समय राम्रो बित्नेछ।',keywords:['शुभ रङ: रातो','शुभ अंक: ९','ग्रह: मंगल']}),
+  build(c,d,s){ const parts=[ headBlocks(c,'राशिफल',s),
+    [heroBlock(c,d.sign,s,90,32,0.84,C.goldHi,true)], [ruleBlock(s,30*s)], [bodyBlock(c,d.prediction,s,44,30*s,C.ink)] ];
+    const kw=(d.keywords||[]).filter(Boolean);
+    if(kw.length){ const line=kw.join('     ·     '); fLab(c,32*s); const font=c.font;
+      parts.push([{gap:42*s,h:38*s,draw:(cx,y)=>{c.font=font; centerOne(c,line,cx,y+30*s,C.gold);}}]); }
+    return assemble(parts); },
+  prompt:()=>`नेपाली ज्योतिषी भएर आजको "राशिफल" बनाउनुहोस्:\nराशि: <राशिको नाम>\nभविष्यवाणी: <३-४ वाक्य>\nसंकेत: शुभ रङ, शुभ अंक, ग्रह (कमाले छुट्याउनुहोस्)`,
+  parse(t){const d={keywords:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/राशि\b/.test(k))d.sign=v;else if(/भविष्य|prediction/i.test(k))d.prediction=v;else if(/संकेत|keyword/i.test(k))d.keywords=v.split(/[,·]/).map(x=>x.trim()).filter(Boolean);});return d;},
+  caption:d=>`${d.sign||'आजको राशिफल'} ✨\n\n${d.prediction||''}\n\n${(d.keywords||[]).join(' · ')}\n\nतपाईंको राशि कुन हो? Comment 👇 दैनिक राशिफलका लागि Follow र Save गर्नुहोस्।\n\n#राशिफल #Rashifal #Horoscope #VidhiChakra #Astrology #Nepal` };
+
+CARDS.tathya={ id:'tathya', label:'तथ्य', animatable:true,
+  sample:()=>({number:'१०८',heading:'किन १०८ नै?',fact:'जप माला र मन्त्रमा १०८ अंक पवित्र मानिन्छ। यो सूर्य र पृथ्वीको दूरी (सूर्यको व्यासको लगभग १०८ गुणा) सँग मेल खान्छ। १२ राशि × ९ ग्रह = १०८ — सम्पूर्ण ब्रह्माण्डको प्रतीक।'}),
+  build(c,d,s){ return assemble([
+    [{gap:0,h:38*s,draw:(cx,y)=>{ fLab(c,34*s); centerOne(c,'तथ्य',cx,y+30*s,C.gold); }}],
+    [{gap:18*s,h:200*s,draw:(cx,y)=>{ fDev(c,210*s); const t=d.number||'?'; const w=c.measureText(t).width;
+      c.save(); c.shadowColor='rgba(240,207,107,0.5)'; c.shadowBlur=34; c.fillStyle=C.goldHi; c.textAlign='left'; c.fillText(t,cx-w/2,y+165*s); c.restore(); }}],
+    [heroBlock(c,d.heading,s,66,30,0.84,C.hero,true)], [ruleBlock(s,30*s)], [bodyBlock(c,d.fact,s,42,30*s,C.ink)] ]); },
+  prompt:()=>`नेपाली ज्योतिषी भएर रोचक "तथ्य" कार्ड बनाउनुहोस्:\nअंक: <संख्या/प्रतीक>\nशीर्षक: <छोटो प्रश्न/शीर्षक>\nतथ्य: <२-३ वाक्य>`,
+  parse(t){const d={};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/अंक|number/i.test(k))d.number=v;else if(/शीर्षक|heading/i.test(k))d.heading=v;else if(/तथ्य|fact/i.test(k))d.fact=v;});return d;},
+  caption:d=>`${d.heading||'रोचक तथ्य'} — ${d.number||''} 🤯\n\n${d.fact||''}\n\nथाहा थियो? Comment 👇 यस्ता तथ्यका लागि Follow र Save गर्नुहोस्।\n\n#रोचकतथ्य #DidYouKnow #VidhiChakra #SanatanDharma #Nepal` };
+
+CARDS.gita={ id:'gita', label:'गीता', krishna:true, animatable:true,
+  sample:()=>({ref:'अध्याय २ · श्लोक ४७',shloka:'कर्मण्येवाधिकारस्ते\nमा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्\nमा ते सङ्गोऽस्त्वकर्मणि॥',meaning:'तिम्रो अधिकार कर्ममा मात्र छ, फलमा कहिल्यै होइन। कर्मको फलको कारण तिमी नबन, कर्म नगर्नेतिर पनि आसक्त नहोऊ।',lesson:'फलको चिन्ता त्यागेर निष्काम कर्म गर — यही गीताको सार हो।'}),
+  build(c,d,s){ const parts=[
+    [{gap:0,h:140*s,draw:(cx,y)=>{ c.save(); c.translate(cx,y+70*s);
+      c.shadowColor='rgba(240,207,107,0.6)';c.shadowBlur=32;c.strokeStyle=C.goldHi;c.lineWidth=3.6;c.beginPath();c.arc(0,0,70*s,0,Math.PI*2);c.stroke();c.shadowBlur=0;
+      c.beginPath();c.arc(0,0,70*s*0.26,0,Math.PI*2);c.stroke();c.strokeStyle=C.gold;c.lineWidth=2.4;
+      for(let i=0;i<16;i++){c.beginPath();c.rotate(Math.PI/8);c.moveTo(0,70*s*0.26);c.lineTo(0,70*s);c.stroke();} c.restore(); }}],
+    [{gap:34*s,h:36*s,draw:(cx,y)=>{ fLab(c,32*s); centerOne(c,'श्रीमद्भगवद्गीता',cx,y+28*s,C.goldHi); }}],
+    [{gap:8*s,h:34*s,draw:(cx,y)=>{ fEng(c,30*s); centerOne(c,d.ref||'',cx,y+26*s,C.gold); }}],
+    [verseBlock(c,d.shloka,s,52,36*s,'#FFF8E6')], [ruleBlock(s,30*s)],
+    [bodyBlock(c,d.meaning,s,40,28*s,C.ink)] ];
+    if(d.lesson) parts.push([heroBlock(c,'🪔 '+d.lesson,s,38,30,0.82,C.goldHi)]);
+    return assemble(parts); },
+  prompt:()=>`नेपाली ज्योतिषी भएर भगवद्गीताको "श्लोक" कार्ड बनाउनुहोस्:\nसन्दर्भ: <अध्याय X · श्लोक Y>\nश्लोक: <संस्कृत श्लोक, हरेक पंक्ति नयाँ लाइनमा>\nअर्थ: <नेपालीमा अर्थ>\nशिक्षा: <एक वाक्यको जीवन शिक्षा>`,
+  parse(t){const d={};const g=re=>{const m=t.match(re);return m?m[1].trim():'';};d.ref=g(/सन्दर्भ\s*:(.*)/);const sm=t.match(/श्लोक\s*:([\s\S]*?)(?:अर्थ\s*:|$)/);if(sm)d.shloka=sm[1].trim();const am=t.match(/अर्थ\s*:([\s\S]*?)(?:शिक्षा\s*:|$)/);if(am)d.meaning=am[1].trim();d.lesson=g(/शिक्षा\s*:(.*)/);return d;},
+  caption:d=>`श्रीमद्भगवद्गीता — ${d.ref||''} 🙏\n\n${(d.shloka||'').replace(/\n/g,' ')}\n\nअर्थ: ${d.meaning||''}\n\n${d.lesson||''}\n\nदैनिक श्लोकका लागि Follow गर्नुहोस्, परिवारसँग Share गर्नुहोस् 🪔\n\n#भगवद्गीता #BhagavadGita #VidhiChakra #Krishna #SanatanDharma #Nepal` };
+
+CARDS.quiz={ id:'quiz', label:'क्विज', animatable:true, isQuiz:true,
+  sample:()=>({questions:[
+    {q:'भगवद्गीता कति अध्यायमा विभाजित छ?',opts:['१४','१८','२४','१२'],correct:1},
+    {q:'महादेवको त्रिशूल केको प्रतीक हो?',opts:['तीन गुण','तीन लोक','तीन काल','माथिका सबै'],correct:3},
+    {q:'कुन ग्रहलाई नवग्रहको राजा भनिन्छ?',opts:['चन्द्र','मंगल','सूर्य','बृहस्पति'],correct:2}]}),
+  build(c,d,s){ return quizFrame(c,d,s,{qi:0,reveal:0,countdown:null}); },
+  prompt:()=>`नेपाली ज्योतिषी भएर ३ प्रश्नको "क्विज" बनाउनुहोस् (सनातन धर्म/ज्योतिष)। हरेक प्रश्नका लागि:\nप्रश्न: <प्रश्न>\nक: <विकल्प A>\nख: <विकल्प B>\nग: <विकल्प C>\nघ: <विकल्प D>\nसही: <क/ख/ग/घ>\n(प्रत्येक प्रश्न खाली लाइनले छुट्याउनुहोस्)`,
+  parse(t){const qs=[];t.split(/\n\s*\n/).forEach(b=>{const q={opts:[],correct:0};const m={'क':0,'ख':1,'ग':2,'घ':3,'a':0,'b':1,'c':2,'d':3};b.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();const kk=k.trim().toLowerCase();if(/प्रश्न|question/i.test(k))q.q=v;else if(/^(क|ख|ग|घ|a|b|c|d)$/i.test(kk))q.opts[m[kk]]=v;else if(/सही|correct/i.test(k)){const cc=v.trim().toLowerCase();q.correct=m[cc]!=null?m[cc]:(parseInt(v)-1||0);}});if(q.q)qs.push(q);});return{questions:qs};},
+  caption:d=>`क्विज समय! 🧠 कति सही गर्नुहुन्छ?\n\n${(d.questions||[]).map((q,i)=>(DEV[i]||i+1)+'. '+q.q).join('\n')}\n\nजवाफ Comment 👇 (उत्तर भिडियोमा!) यस्ता क्विजका लागि Follow र Save गर्नुहोस्।\n\n#क्विज #Quiz #SanatanDharma #VidhiChakra #Nepal` };
+
+/* quiz frame: header + progress + big white question + 4 pills (+ optional countdown) */
+function quizFrame(c,d,s,st){
+  const qs=d.questions||[]; const q=qs[st.qi]; if(!q) return {blocks:[{gap:0,h:0,draw:()=>{}}],total:0};
+  const parts=[];
+  parts.push([{gap:0,h:90*s,draw:(cx,y)=>chakra(c,cx,y+45*s,45*s,true)}]);
+  parts.push([{gap:34*s,h:34*s,draw:(cx,y)=>{ fLab(c,32*s); centerOne(c,'सनातन क्विज',cx,y+28*s,C.gold); }}]);
+  parts.push([{gap:14*s,h:32*s,draw:(cx,y)=>{ fLab(c,28*s); centerOne(c,'प्रश्न '+(DEV[st.qi]||st.qi+1)+' / '+(DEV[qs.length-1]||qs.length),cx,y+24*s,C.goldHi); }}]);
+  parts.push([heroBlock(c,q.q,s,60,40,0.86,C.hero,true)]);
+  const optW=W*0.82, optL=(W-optW)/2, optH=112*s;
+  (q.opts||[]).slice(0,4).forEach((o,i)=>{
+    fDev(c,40*s); const tw=optW-150*s; const ol=wrapLines(c,o,tw); const font=c.font;
+    const h=Math.max(optH, ol.length*46*s+58*s);
+    parts.push([{gap:i===0?48*s:24*s,h,draw:(cx,y)=>{
+      const correct=i===q.correct && st.reveal>0; const a=clamp(st.reveal,0,1);
+      c.fillStyle=correct?`rgba(31,122,54,${0.30+0.5*a})`:'rgba(255,255,255,0.055)';
+      roundRect(c,optL,y,optW,h,20*s); c.fill();
+      c.lineWidth=2.2; c.strokeStyle=correct?C.greenHi:'rgba(212,175,55,0.32)'; roundRect(c,optL,y,optW,h,20*s); c.stroke();
+      // letter badge in a gold ring
+      c.save(); c.strokeStyle=correct?C.greenHi:C.gold; c.lineWidth=2.4; c.beginPath(); c.arc(optL+58*s,y+h/2,32*s,0,Math.PI*2); c.stroke();
+      fLab(c,34*s); centerOne(c,ABCD[i],optL+58*s,y+h/2+12*s,correct?C.greenHi:C.gold); c.restore();
+      // option text left-aligned, vertically centered
+      c.font=font; c.textAlign='left'; c.fillStyle=correct?'#ECFDEA':C.ink;
+      const tY=y+h/2 - (ol.length-1)*23*s + 14*s;
+      ol.forEach((ln,j)=>c.fillText(ln, optL+108*s, tY+j*46*s));
+      if(correct){ fLab(c,30*s); const ck='✓'; const cw=c.measureText(ck).width; c.fillStyle=C.greenHi; c.fillText(ck, optL+optW-46*s-cw, y+h/2+11*s); }
+    }}]);
+  });
+  if(st.countdown!=null && st.reveal===0){
+    parts.push([{gap:40*s,h:88*s,draw:(cx,y)=>{ c.save(); c.translate(cx,y+44*s);
+      c.strokeStyle='rgba(212,175,55,0.28)';c.lineWidth=6*s;c.beginPath();c.arc(0,0,38*s,0,Math.PI*2);c.stroke();
+      c.strokeStyle=C.goldHi;c.lineWidth=6*s;c.beginPath();c.arc(0,0,38*s,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(st.countFrac||0,0,1));c.stroke();
+      fDev(c,46*s); centerOne(c,DEV[st.countdown-1]||String(st.countdown),0,16*s,C.goldHi); c.restore(); }}]);
+  }
+  return assemble(parts);
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ============================ STATE + RENDER ============================ */
+const state={}; let activeType='gyan';
+Object.keys(CARDS).forEach(k=>state[k]=CARDS[k].sample());
+function renderTo(c,W,H,type,opt){ ctxRef=c; const card=CARDS[type]; c.clearRect(0,0,W,H); paintBase(c,W,H,type);
+  fitAndRender(c,W,H,0.12,0.15,(s)=>card.build(c,state[type],s),opt); footer(c,W,H); }
+function renderPreview(){ renderTo(ctx,W,H9,activeType,{reveal:1,dy:0}); }
+
+/* ============================ TABS + PANELS ============================ */
+const tabsEl=document.getElementById('tabs');
+const order=['gyan','upaya','prashna','mantra','rashifal','tathya','gita','quiz','carousel'];
+const LABELS={gyan:'ज्ञान',upaya:'उपाय',prashna:'प्रश्न',mantra:'मन्त्र',rashifal:'राशिफल',tathya:'तथ्य',gita:'गीता',quiz:'क्विज',carousel:'क्यारौसेल'};
+order.forEach(k=>{ const t=document.createElement('div'); t.className='tab'+(k===activeType?' on':''); t.textContent=LABELS[k]; t.dataset.k=k; t.onclick=()=>selectTab(k); tabsEl.appendChild(t); });
+function selectTab(k){ activeType=k; [...tabsEl.children].forEach(t=>t.classList.toggle('on',t.dataset.k===k));
+  if(k==='carousel'){ showCarousel(true); } else { showCarousel(false); buildPanel(k); renderPreview(); } }
+
+const panel=document.getElementById('panel');
+function fld(label,value,oninput,area){ const d=document.createElement('div'); d.className='field';
+  const l=document.createElement('label'); l.textContent=label; d.appendChild(l);
+  const i=document.createElement(area?'textarea':'input'); if(area)i.rows=area; i.value=value||''; i.oninput=()=>oninput(i.value); d.appendChild(i); return d; }
+function listEditor(label,arr,onchange,max){ const wrap=document.createElement('div'); wrap.className='field';
+  const l=document.createElement('label'); l.textContent=label; wrap.appendChild(l);
+  function redraw(){ [...wrap.querySelectorAll('.row,.mini')].forEach(e=>e.remove());
+    arr.forEach((v,i)=>{ const row=document.createElement('div'); row.className='row';
+      const n=document.createElement('div'); n.className='num'; n.textContent=DEV[i]||i+1; row.appendChild(n);
+      const ta=document.createElement('textarea'); ta.rows=2; ta.value=v; ta.oninput=()=>{arr[i]=ta.value;onchange();}; row.appendChild(ta);
+      const x=document.createElement('button'); x.className='x'; x.textContent='×'; x.onclick=()=>{arr.splice(i,1);onchange();redraw();}; row.appendChild(x); wrap.appendChild(row); });
+    if(arr.length<(max||5)){ const add=document.createElement('button'); add.className='mini'; add.textContent='+ थप्नुहोस्'; add.onclick=()=>{arr.push('');onchange();redraw();}; wrap.appendChild(add); } }
+  redraw(); return wrap; }
+function quizEditor(d,onchange){ const wrap=document.createElement('div'); wrap.className='field';
+  const l=document.createElement('label'); l.textContent='प्रश्नहरू (४ विकल्प, सही चिन्ह लगाउनुहोस्)'; wrap.appendChild(l);
+  function redraw(){ [...wrap.querySelectorAll('.quiz-q,.mini')].forEach(e=>e.remove());
+    d.questions.forEach((q,qi)=>{ const box=document.createElement('div'); box.className='quiz-q';
+      const qta=document.createElement('textarea'); qta.rows=2; qta.value=q.q; qta.placeholder='प्रश्न '+(qi+1); qta.oninput=()=>{q.q=qta.value;onchange();}; box.appendChild(qta);
+      if(!q.opts)q.opts=['','','',''];
+      q.opts.slice(0,4).forEach((o,oi)=>{ const row=document.createElement('div'); row.className='opt';
+        const pick=document.createElement('button'); pick.className='pick'+(q.correct===oi?' on':''); pick.textContent=ABCD[oi]; pick.onclick=()=>{q.correct=oi;onchange();redraw();}; row.appendChild(pick);
+        const inp=document.createElement('input'); inp.value=o; inp.oninput=()=>{q.opts[oi]=inp.value;onchange();}; row.appendChild(inp); box.appendChild(row); });
+      const del=document.createElement('button'); del.className='mini'; del.textContent='प्रश्न हटाउनुहोस्'; del.onclick=()=>{d.questions.splice(qi,1);onchange();redraw();}; box.appendChild(del); wrap.appendChild(box); });
+    if(d.questions.length<5){ const add=document.createElement('button'); add.className='mini'; add.textContent='+ प्रश्न थप्नुहोस्'; add.onclick=()=>{d.questions.push({q:'',opts:['','','',''],correct:0});onchange();redraw();}; wrap.appendChild(add); } }
+  redraw(); return wrap; }
+
+function buildPanel(k){ panel.innerHTML=''; const d=state[k];
+  const title=document.createElement('div'); title.className='sec-title'; title.textContent=LABELS[k]+' · सम्पादन'; panel.appendChild(title);
+  const re=()=>renderPreview();
+  if(k==='gyan'){ panel.appendChild(fld('शीर्षक',d.heading,v=>{d.heading=v;re();})); panel.appendChild(listEditor('बुँदाहरू',d.points,re,5)); panel.appendChild(fld('स्रोत',d.source,v=>{d.source=v;re();})); }
+  else if(k==='upaya'){ panel.appendChild(fld('समस्या',d.problem,v=>{d.problem=v;re();})); panel.appendChild(listEditor('उपाय चरणहरू',d.steps,re,5)); panel.appendChild(fld('नोट',d.note,v=>{d.note=v;re();})); }
+  else if(k==='prashna'){ panel.appendChild(fld('प्रश्न',d.question,v=>{d.question=v;re();},2)); panel.appendChild(fld('उत्तर',d.answer,v=>{d.answer=v;re();},4)); }
+  else if(k==='mantra'){ panel.appendChild(fld('मन्त्र (Enter ले लाइन तोड्नुहोस्)',d.mantra,v=>{d.mantra=v;re();},4)); panel.appendChild(fld('अर्थ',d.meaning,v=>{d.meaning=v;re();},4)); }
+  else if(k==='rashifal'){ panel.appendChild(fld('राशि',d.sign,v=>{d.sign=v;re();})); panel.appendChild(fld('भविष्यवाणी',d.prediction,v=>{d.prediction=v;re();},4)); panel.appendChild(listEditor('संकेत',d.keywords,re,4)); }
+  else if(k==='tathya'){ panel.appendChild(fld('अंक/संख्या',d.number,v=>{d.number=v;re();})); panel.appendChild(fld('शीर्षक',d.heading,v=>{d.heading=v;re();})); panel.appendChild(fld('तथ्य',d.fact,v=>{d.fact=v;re();},4)); }
+  else if(k==='gita'){ panel.appendChild(fld('सन्दर्भ',d.ref,v=>{d.ref=v;re();})); panel.appendChild(fld('श्लोक',d.shloka,v=>{d.shloka=v;re();},4)); panel.appendChild(fld('अर्थ',d.meaning,v=>{d.meaning=v;re();},3)); panel.appendChild(fld('शिक्षा',d.lesson,v=>{d.lesson=v;re();},2)); }
+  else if(k==='quiz'){ panel.appendChild(quizEditor(d,re)); }
+}
+
+/* ============================ PNG ============================ */
+document.getElementById('btnPng').onclick=()=>{ let name;
+  if(activeType==='carousel'){ renderCaro(curSlide); name='vidhi-carousel-slide-'+(curSlide+1)+'.png'; }
+  else { renderPreview(); name='vidhi-chakra-'+activeType+'.png'; }
+  cv.toBlob(b=>{ if(b) openImageSaver(b,name); }, 'image/png'); };
+
+/* ============================ VIDEO ============================ */
+const modal=document.getElementById('vmodal');
+const vbar=document.getElementById('vbar'),vstatus=document.getElementById('vstatus'),vtitle=document.getElementById('vtitle');
+const vpreview=document.getElementById('vpreview'),vsave=document.getElementById('vsave'),vdl=document.getElementById('vdl'),vclose=document.getElementById('vclose');
+const vimg=document.getElementById('vimg'),vbarwrap=document.getElementById('vbarwrap');
+vclose.onclick=()=>{ modal.classList.remove('on'); try{vpreview.pause();}catch(e){} };
+function openImageSaver(blob,name){ if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}
+  lastBlob=blob; lastMime='image/png'; lastExt='png'; lastUrl=URL.createObjectURL(blob);
+  modal.classList.add('on'); vbarwrap.style.display='none'; vpreview.style.display='none';
+  vimg.src=lastUrl; vimg.style.display='block';
+  vtitle.textContent='तस्बिर तयार छ! ✅'; vstatus.textContent='तस्बिर लामो थिच्नुहोस् → "Save to Photos", वा तलको बटन।';
+  vsave.style.display='block'; vsave.textContent='📲 Save / Share';
+  vdl.href=lastUrl; vdl.download=name; vdl.style.display='inline'; vdl.textContent='वा डाउनलोड गर्नुहोस्'; }
+
+function drawVideoFrame(type,tSec,dur){ ctxRef=vctx; const card=CARDS[type]; vctx.clearRect(0,0,W,H9);
+  const zoom=1+0.04*(tSec/dur); vctx.save(); vctx.translate(W/2,H9*0.46); vctx.scale(zoom,zoom); vctx.translate(-W/2,-H9*0.46); paintBase(vctx,W,H9,type); vctx.restore();
+  if(card.isQuiz){ drawQuizVideo(type,tSec,dur); }
+  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; fitAndRender(vctx,W,H9,0.12,0.15,(s)=>card.build(vctx,state[type],s),{reveal,dy}); }
+  footer(vctx,W,H9); }
+function quizTiming(d){ const n=Math.min((d.questions||[]).length,5); const intro=1.0,per=6.0; return {n,intro,per,dur:Math.min(38,intro+n*per)}; }
+function drawQuizVideo(type,t,dur){ const d=state[type]; const{n,intro,per}=quizTiming(d);
+  if(t<intro){ const a=clamp(t/0.5,0,1); fitAndRender(vctx,W,H9,0.12,0.15,(s)=>assemble([
+    [{gap:0,h:130*s,draw:(cx,y)=>chakra(vctx,cx,y+65*s,65*s,true)}],
+    [heroBlock(vctx,'सनातन क्विज!',s,76,40,0.84,C.hero)] ]),{reveal:a,dy:(1-a)*36}); return; }
+  const local=t-intro; const qi=Math.min(Math.floor(local/per),n-1); const into=local-qi*per;
+  const slide=clamp(into/0.4,0,1); const revealStart=per-1.6; const reveal=into>=revealStart?clamp((into-revealStart)/0.4,0,1):0;
+  let countdown=null,countFrac=0; if(reveal===0){ const cdTotal=revealStart-1.0,cdElapsed=into-1.0;
+    if(cdElapsed>0){ countdown=Math.max(1,Math.ceil((cdTotal-cdElapsed)/(cdTotal/3))); countFrac=clamp(cdElapsed/cdTotal,0,1); } }
+  fitAndRender(vctx,W,H9,0.12,0.15,(s)=>quizFrame(vctx,d,s,{qi,reveal,countdown,countFrac}),{reveal:slide,dy:(1-slide)*30}); }
+
+let lastBlob=null,lastUrl=null,lastMime='video/mp4',lastExt='mp4';
+async function pickCodec(){ if(!('VideoEncoder'in window))return null;
+  for(const codec of ['avc1.640028','avc1.42E028','avc1.4D0028','avc1.640020','avc1.42001f']){
+    try{ const{supported}=await VideoEncoder.isConfigSupported({codec,width:W,height:H9,bitrate:6e6,framerate:30}); if(supported)return codec; }catch(e){} }
+  return null; }
+function timeout(ms,msg){ return new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg||'timeout')),ms)); }
+
+document.getElementById('btnVid').onclick=async()=>{ const type=activeType;
+  modal.classList.add('on'); vpreview.style.display='none'; vsave.style.display='none'; vdl.style.display='none';
+  vimg.style.display='none'; vbarwrap.style.display='block'; vsave.textContent='📲 Save to Photos'; vdl.textContent='वा यहाँबाट डाउनलोड गर्नुहोस्';
+  vtitle.textContent='भिडियो बन्दैछ…'; vstatus.textContent='तयारी हुँदैछ…'; vbar.style.width='0%';
+  lastBlob=null; if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}
+  const fps=30; const dur=CARDS[type].isQuiz?quizTiming(state[type]).dur:8; const totalFrames=Math.round(dur*fps);
+  try{ const codec=await pickCodec(); if(codec){ await encodeMP4(type,codec,fps,totalFrames); } else { await encodeWebM(type,fps,dur); } finishVideo(); }
+  catch(err){ vtitle.textContent='त्रुटि भयो'; vstatus.textContent='भिडियो बनाउन सकिएन: '+(err&&err.message||err)+'. फेरि प्रयास गर्नुहोस्।'; } };
+
+async function encodeMP4(type,codec,fps,totalFrames){
+  const muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:'avc',width:W,height:H9,frameRate:fps},fastStart:'in-memory'});
+  let encErr=null; const encoder=new VideoEncoder({output:(ch,m)=>muxer.addVideoChunk(ch,m),error:e=>{encErr=e;}});
+  encoder.configure({codec,width:W,height:H9,bitrate:6e6,framerate:fps,avc:{format:'avc'}});
+  for(let i=0;i<totalFrames;i++){ if(encErr)throw encErr;
+    drawVideoFrame(type,i/fps,totalFrames/fps);
+    const frame=new VideoFrame(vcv,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)});
+    encoder.encode(frame,{keyFrame:i%60===0}); frame.close();
+    let waited=0; while(encoder.encodeQueueSize>20&&waited<2000){ await sleep(8); waited+=8; }
+    if(i%6===5) await sleep(0);
+    if(i%4===0){ vbar.style.width=Math.round(i/totalFrames*88)+'%'; vstatus.textContent='फ्रेम '+i+' / '+totalFrames; } }
+  vstatus.textContent='अन्तिम रूप दिँदै…'; vbar.style.width='94%';
+  await Promise.race([encoder.flush(),timeout(20000,'encoder finalize timeout')]); if(encErr)throw encErr;
+  muxer.finalize(); lastMime='video/mp4'; lastExt='mp4'; lastBlob=new Blob([muxer.target.buffer],{type:'video/mp4'}); }
+
+async function encodeWebM(type,fps,dur){ vstatus.textContent='WebM mode (fallback)…';
+  const stream=vcv.captureStream(fps); let mime='video/webm;codecs=vp9'; if(!MediaRecorder.isTypeSupported(mime))mime='video/webm;codecs=vp8'; if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';
+  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6e6}); const chunks=[]; rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  const done=new Promise(res=>rec.onstop=res); rec.start(); const t0=performance.now();
+  await new Promise(res=>{ function step(){ const t=(performance.now()-t0)/1000; if(t>=dur){res();return;} drawVideoFrame(type,t,dur); vbar.style.width=Math.round(t/dur*88)+'%'; requestAnimationFrame(step); } step(); });
+  rec.stop(); await done; lastMime=mime; lastExt='webm'; lastBlob=new Blob(chunks,{type:mime}); }
+
+function finishVideo(){ vbar.style.width='100%'; lastUrl=URL.createObjectURL(lastBlob);
+  vtitle.textContent='भिडियो तयार छ! ✅'; vstatus.textContent=(lastExt==='mp4'?'MP4':'WebM')+' · '+(lastBlob.size/1048576).toFixed(1)+' MB';
+  vpreview.src=lastUrl; vpreview.style.display='block'; vpreview.play().catch(()=>{});
+  vdl.href=lastUrl; vdl.download='vidhi-chakra-'+activeType+'.'+lastExt; vdl.style.display='inline'; vsave.style.display='block'; }
+vsave.onclick=async()=>{ if(!lastBlob)return; const file=new File([lastBlob],'vidhi-chakra-'+activeType+'.'+lastExt,{type:lastMime});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'विधि चक्र'}); vstatus.textContent='Share बाट "Save Video" छान्नुहोस्।'; }catch(e){ vstatus.textContent='रद्द भयो — तलको लिङ्कबाट डाउनलोड गर्नुहोस्।'; } }
+  else { vdl.click(); vstatus.textContent='डाउनलोड भयो — Files/Photos मा हेर्नुहोस्।'; } };
+
+/* ============================ CONTENT TOOLS ============================ */
+const ioBox=document.getElementById('ioBox'),ioHint=document.getElementById('ioHint');
+function copy(text,msg){ ioBox.value=text; if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>flash(msg)).catch(()=>{ioBox.select();flash(msg);}); } else { ioBox.select(); document.execCommand('copy'); flash(msg); } }
+function flash(m){ ioHint.textContent=m; setTimeout(()=>ioHint.textContent='सुझाव: AI को जवाफ बाकसमा टाँसेर Smart Paste थिच्नुहोस्।',2600); }
+document.getElementById('btnPrompt').onclick=()=>{ if(activeType==='carousel')return; copy(CARDS[activeType].prompt(state[activeType]),'✅ AI Prompt कपी भयो — ChatGPT/Gemini मा टाँस्नुहोस्।'); };
+function doSmartParse(){ if(activeType==='carousel'){flash('क्यारौसेलमा Smart Paste छैन।');return;}
+  const txt=ioBox.value.trim(); if(!txt){flash('पहिले AI को जवाफ बाकसमा टाँस्नुहोस्।');return;}
+  try{ const clean=txt.replace(/\*\*/g,'').replace(/__/g,'').replace(/^\s*#+\s*/gm,'').replace(/^\s*[-•]\s+/gm,'');
+    const parsed=CARDS[activeType].parse(clean);
+    const got=Object.keys(parsed).some(k=>{const v=parsed[k]; return Array.isArray(v)?v.length:(v&&String(v).trim());});
+    if(got){ state[activeType]=Object.assign(state[activeType],parsed); buildPanel(activeType); renderPreview(); flash('✅ फिल्डहरू भरियो!'); }
+    else { flash('ढाँचा नमिल्यो — "AI Prompt कपी" को ढाँचामा जवाफ छ कि जाँच्नुहोस्।'); }
+  }catch(e){ flash('पार्स गर्न सकिएन — ढाँचा मिलाएर फेरि टाँस्नुहोस्।'); } }
+document.getElementById('btnParse').onclick=doSmartParse;
+document.getElementById('btnPaste').onclick=doSmartParse;
+// auto-parse shortly after a paste, so it "just works"
+ioBox.addEventListener('paste',()=>{ setTimeout(()=>{ if(ioBox.value.trim().length>12 && activeType!=='carousel') doSmartParse(); },120); });
+document.getElementById('btnCap').onclick=()=>{ if(activeType==='carousel')return; copy(CARDS[activeType].caption(state[activeType]),'✅ Caption कपी भयो — Facebook मा टाँस्नुहोस्।'); };
+document.getElementById('btnReel').onclick=()=>{ if(activeType==='carousel')return; const d=state[activeType];
+  const topic=d.heading||d.question||d.sign||d.problem||d.ref||LABELS[activeType];
+  copy(`तपाईं नेपाली भाइरल reel स्क्रिप्ट लेखक हुनुहुन्छ। "${topic}" विषयमा ३० सेकेन्डको बोल्ने स्क्रिप्ट नेपालीमा लेख्नुहोस्:\n\n१. HOOK (पहिलो ३ सेकेन्ड):\n२. BODY (मुख्य कुरा):\n३. CTA (Follow/Comment/Save):\n४. ON-SCREEN TEXT:\n५. ३ वैकल्पिक HOOK:\n\nजोशिलो, आत्मीय स्वरमा।`,'✅ Reel Script prompt कपी भयो — AI मा टाँस्नुहोस्।'); };
+
+/* ============================ CAROUSEL (1:1) ============================ */
+const caroState={hook:'घरमा सुख-शान्ति ल्याउने ५ वैदिक उपाय',slides:['मुख्य ढोकामा स्वस्तिक र शुभ-लाभ लेख्नुहोस्।','बिहान शंख वा घण्टी बजाउनुहोस् — नकारात्मक ऊर्जा हट्छ।','तुलसीको बिरुवा घरको आँगनमा राख्नुहोस्।','साँझ घरमा घिउको दीप बाल्नुहोस्।','शुक्रबार लक्ष्मीको पूजा गर्नुहोस्।']};
+const frameWrap=document.getElementById('frameWrap'); let curSlide=0;
+function showCarousel(on){ if(on){ frameWrap.className='frame r11'; cv.height=H1; panel.innerHTML=''; document.getElementById('btnVid').style.display='none'; buildCaroPanel(); renderCaro(0); panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  else { frameWrap.className='frame r916'; cv.height=H9; document.getElementById('btnVid').style.display=''; } }
+function buildCaroPanel(){ const t=document.createElement('div'); t.className='sec-title'; t.textContent='क्यारौसेल · १:१ slides'; panel.appendChild(t);
+  panel.appendChild(fld('Hook slide (पहिलो)',caroState.hook,v=>{caroState.hook=v;renderCaro(curSlide);}));
+  panel.appendChild(listEditor('Content slides (३–८)',caroState.slides,()=>renderCaro(curSlide),8));
+  const nav=document.createElement('div'); nav.className='btns';
+  const prev=document.createElement('button'); prev.className='btn ghost'; prev.textContent='‹ अघिल्लो'; prev.onclick=()=>renderCaro(curSlide-1);
+  const next=document.createElement('button'); next.className='btn ghost'; next.textContent='अर्को ›'; next.onclick=()=>renderCaro(curSlide+1);
+  nav.appendChild(prev); nav.appendChild(next); panel.appendChild(nav);
+  const dl=document.createElement('button'); dl.className='btn'; dl.textContent='📥 सबै slides डाउनलोड'; dl.onclick=downloadAllCaro; panel.appendChild(dl);
+  const hint=document.createElement('p'); hint.className='note'; hint.textContent='हरेक slide छुट्टै PNG बन्छ।'; panel.appendChild(hint); }
+function caroSlides(){ return [{kind:'hook'}].concat(caroState.slides.map((s,i)=>({kind:'pt',i,text:s}))).concat([{kind:'cta'}]); }
+function renderCaro(idx){ const all=caroSlides(); curSlide=clamp(idx,0,all.length-1); drawCaroSlide(ctx,all[curSlide],curSlide,all.length); }
+function drawCaroSlide(c,sl,idx,count){ ctxRef=c; c.clearRect(0,0,W,H1); paintBase(c,W,H1,'carousel');
+  if(sl.kind==='hook'){ fitAndRender(c,W,H1,0.12,0.15,(s)=>assemble([
+    [{gap:0,h:90*s,draw:(cx,y)=>chakra(c,cx,y+45*s,45*s,true)}],
+    [heroBlock(c,caroState.hook,s,80,44,0.84,C.hero,true)],
+    [{gap:38*s,h:32*s,draw:(cx,y)=>{ fLab(c,30*s); centerOne(c,'→ Swipe गर्नुहोस्',cx,y+26*s,C.gold); }}] ]),{}); }
+  else if(sl.kind==='pt'){ fitAndRender(c,W,H1,0.12,0.15,(s)=>assemble([
+    [{gap:0,h:150*s,draw:(cx,y)=>{ fDev(c,160*s); const t=DEV[sl.i]||sl.i+1; const w=c.measureText(t).width;
+      c.save();c.shadowColor='rgba(240,207,107,.5)';c.shadowBlur=30;c.fillStyle=C.goldHi;c.textAlign='left';c.fillText(t,cx-w/2,y+122*s);c.restore(); }}],
+    [ruleBlock(s,30*s)], [heroBlock(c,sl.text,s,56,34,0.86,C.hero)] ]),{}); }
+  else { fitAndRender(c,W,H1,0.12,0.15,(s)=>{ const acts=['👍 Like','💬 Comment','🔖 Save','↗️ Share','➕ Follow'];
+    const parts=[ [{gap:0,h:90*s,draw:(cx,y)=>chakra(c,cx,y+45*s,45*s,true)}], [heroBlock(c,'मन पर्‍यो? 🙏',s,72,40)] ];
+    acts.forEach((a,i)=>parts.push([{gap:i?14*s:30*s,h:54*s,draw:(cx,y)=>{ fDev(c,46*s); centerOne(c,a,cx,y+40*s,C.goldHi); }}]));
+    parts.push([{gap:34*s,h:44*s,draw:(cx,y)=>{ fEng(c,34*s); centerOne(c,'@vidhichakra',cx,y+34*s,C.gold); }}]);
+    return assemble(parts); },{}); }
+  footer(c,W,H1);
+  c.save(); const n=count,gap=26,x0=W/2-(n-1)*gap/2,yy=H1-40; for(let i=0;i<n;i++){ c.beginPath(); c.fillStyle=i===idx?C.goldHi:'rgba(212,175,55,.3)'; c.arc(x0+i*gap,yy,i===idx?7:5,0,Math.PI*2); c.fill(); } c.restore(); }
+async function downloadAllCaro(){ const all=caroSlides(); for(let i=0;i<all.length;i++){ drawCaroSlide(ctx,all[i],i,all.length); await sleep(60);
+  const a=document.createElement('a'); a.download='vidhi-carousel-'+(i+1)+'.png'; a.href=cv.toDataURL('image/png'); a.click(); await sleep(180); } renderCaro(curSlide); }
+
+/* ============================ INIT ============================ */
+async function preloadFonts(){ try{ await Promise.all([
+  document.fonts.load("400 80px 'Tiro Devanagari Sanskrit'"),
+  document.fonts.load("400 40px 'EB Garamond'"),
+  document.fonts.load("italic 400 40px 'EB Garamond'"),
+  document.fonts.load("700 40px 'Philosopher'") ]); }catch(e){} if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } }
+async function init(){ await preloadFonts(); buildPanel(activeType); renderPreview(); setTimeout(()=>{ if(activeType!=='carousel') renderPreview(); else renderCaro(curSlide); },180); }
+if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded',init);
+
+})();
+
+</script>
+</body>
+</html>
