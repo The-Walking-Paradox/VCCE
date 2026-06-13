@@ -112,8 +112,8 @@
       <div class="status" id="vstatus">तयारी हुँदैछ…</div>
       <video id="vpreview" playsinline muted loop controls style="display:none;"></video>
       <img id="vimg" alt="card" style="display:none;width:62%;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);">
-      <button class="btn" id="vsave" style="display:none;">📲 Save to Photos</button>
-      <a class="dl" id="vdl" style="display:none;" download="vidhi-chakra.mp4">वा यहाँबाट डाउनलोड गर्नुहोस्</a>
+      <button class="btn" id="vsave" style="display:none;">📲 Save / Share</button>
+      <a class="btn ghost" id="vdl" style="display:none;text-decoration:none;text-align:center;" download="vidhi-chakra.mp4">⬇️ डाउनलोड (फोनमा सेभ)</a>
       <button class="btn ghost" id="vclose">बन्द गर्नुहोस्</button>
     </div>
   </div>
@@ -2044,6 +2044,10 @@ const DEV=['१','२','३','४','५','६','७','८'];
 const ABCD=['A','B','C','D'];
 const OPTC=['#D4AF37','#3BA7A0','#D873A0','#8E86E0'];
 const OPTB=['rgba(212,175,55,0.55)','rgba(59,167,160,0.55)','rgba(216,115,160,0.55)','rgba(142,134,224,0.55)'];
+const UA=navigator.userAgent||'';
+const isIOS=/iPad|iPhone|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isAndroid=/Android/.test(UA);
+function platformHint(kind){ if(isIOS) return kind==='photo'?'तस्बिर लामो थिच्नुहोस् → Save to Photos, वा Share बटन।':'Share बटन थिच्नुहोस् → Save Video।'; if(isAndroid) return kind==='photo'?'⬇️ डाउनलोड थिच्नुहोस् → Gallery/Downloads मा सेभ। वा Share → Gallery।':'⬇️ डाउनलोड थिच्नुहोस् → फोनमा सेभ। वा Share → Gallery/Photos।'; return 'डाउनलोड वा Share प्रयोग गर्नुहोस्।'; }
 const devNum=n=>String(n).split('').map(d=>'०१२३४५६७८९'[+d]||d).join('');
 
 const cv = document.getElementById('card');
@@ -2433,9 +2437,9 @@ function openImageSaver(blob,name){ if(lastUrl){URL.revokeObjectURL(lastUrl);las
   lastBlob=blob; lastMime='image/png'; lastExt='png'; lastUrl=URL.createObjectURL(blob);
   modal.classList.add('on'); vbarwrap.style.display='none'; vpreview.style.display='none';
   vimg.src=lastUrl; vimg.style.display='block';
-  vtitle.textContent='तस्बिर तयार छ! ✅'; vstatus.textContent='तस्बिर लामो थिच्नुहोस् → "Save to Photos", वा तलको बटन।';
+  vtitle.textContent='तस्बिर तयार छ! ✅'; vstatus.textContent=platformHint('photo');
   vsave.style.display='block'; vsave.textContent='📲 Save / Share';
-  vdl.href=lastUrl; vdl.download=name; vdl.style.display='inline'; vdl.textContent='वा डाउनलोड गर्नुहोस्'; }
+  vdl.href=lastUrl; vdl.download=name; vdl.textContent='⬇️ डाउनलोड (फोनमा सेभ)'; vdl.style.display='block'; }
 
 function drawVideoFrame(type,tSec,dur){ ctxRef=vctx; const card=CARDS[type]; vctx.clearRect(0,0,W,H9);
   const zoom=1+0.04*(tSec/dur); vctx.save(); vctx.translate(W/2,H9*0.46); vctx.scale(zoom,zoom); vctx.translate(-W/2,-H9*0.46); paintBase(vctx,W,H9,type); vctx.restore();
@@ -2465,7 +2469,7 @@ function timeout(ms,msg){ return new Promise((_,rej)=>setTimeout(()=>rej(new Err
 
 document.getElementById('btnVid').onclick=async()=>{ const type=activeType;
   modal.classList.add('on'); vpreview.style.display='none'; vsave.style.display='none'; vdl.style.display='none';
-  vimg.style.display='none'; vbarwrap.style.display='block'; vsave.textContent='📲 Save to Photos'; vdl.textContent='वा यहाँबाट डाउनलोड गर्नुहोस्';
+  vimg.style.display='none'; vbarwrap.style.display='block'; vsave.textContent='📲 Save / Share'; vdl.textContent='⬇️ डाउनलोड (फोनमा सेभ)';
   vtitle.textContent='भिडियो बन्दैछ…'; vstatus.textContent='तयारी हुँदैछ…'; vbar.style.width='0%';
   lastBlob=null; if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}
   const fps=30; const dur=CARDS[type].isQuiz?quizTiming(state[type]).dur:8; const totalFrames=Math.round(dur*fps);
@@ -2495,9 +2499,9 @@ async function encodeWebM(type,fps,dur){ vstatus.textContent='WebM mode (fallbac
   rec.stop(); await done; lastMime=mime; lastExt='webm'; lastBlob=new Blob(chunks,{type:mime}); }
 
 function finishVideo(){ vbar.style.width='100%'; lastUrl=URL.createObjectURL(lastBlob);
-  vtitle.textContent='भिडियो तयार छ! ✅'; vstatus.textContent=(lastExt==='mp4'?'MP4':'WebM')+' · '+(lastBlob.size/1048576).toFixed(1)+' MB';
+  vtitle.textContent='भिडियो तयार छ! ✅'; vstatus.textContent=(lastExt==='mp4'?'MP4':'WebM')+' · '+(lastBlob.size/1048576).toFixed(1)+' MB — '+platformHint('video');
   vpreview.src=lastUrl; vpreview.style.display='block'; vpreview.play().catch(()=>{});
-  vdl.href=lastUrl; vdl.download='vidhi-chakra-'+activeType+'.'+lastExt; vdl.style.display='inline'; vsave.style.display='block'; }
+  vdl.href=lastUrl; vdl.download='vidhi-chakra-'+activeType+'.'+lastExt; vdl.textContent='⬇️ डाउनलोड (फोनमा सेभ)'; vdl.style.display='block'; vsave.style.display='block'; }
 vsave.onclick=async()=>{ if(!lastBlob)return; const file=new File([lastBlob],'vidhi-chakra-'+activeType+'.'+lastExt,{type:lastMime});
   if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'विधि चक्र'}); vstatus.textContent='Share बाट "Save Video" छान्नुहोस्।'; }catch(e){ vstatus.textContent='रद्द भयो — तलको लिङ्कबाट डाउनलोड गर्नुहोस्।'; } }
   else { vdl.click(); vstatus.textContent='डाउनलोड भयो — Files/Photos मा हेर्नुहोस्।'; } };
