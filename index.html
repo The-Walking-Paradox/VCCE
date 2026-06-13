@@ -6,7 +6,7 @@
 <title>विधि चक्र · Content Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Philosopher:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Mukta:wght@500;600;700;800&family=Philosopher:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --base-0:#0A0E27; --base-1:#1A1F4D;
@@ -2042,6 +2042,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const DEV=['१','२','३','४','५','६','७','८'];
 const ABCD=['A','B','C','D'];
+const OPTC=['#D4AF37','#3BA7A0','#D873A0','#8E86E0'];
+const OPTB=['rgba(212,175,55,0.55)','rgba(59,167,160,0.55)','rgba(216,115,160,0.55)','rgba(142,134,224,0.55)'];
 const devNum=n=>String(n).split('').map(d=>'०१२३४५६७८९'[+d]||d).join('');
 
 const cv = document.getElementById('card');
@@ -2053,7 +2055,8 @@ const vctx = vcv.getContext('2d');
 const fDev =(c,s)=>c.font=`400 ${Math.round(s)}px 'Tiro Devanagari Sanskrit'`;
 const fEng =(c,s)=>c.font=`400 ${Math.round(s)}px 'EB Garamond'`;
 const fEngI=(c,s)=>c.font=`italic 400 ${Math.round(s)}px 'EB Garamond'`;
-const fLab =(c,s)=>c.font=`700 ${Math.round(s)}px 'Philosopher'`;
+const fLab =(c,s,w)=>c.font=`${w||700} ${Math.round(s)}px 'Mukta'`;
+const fHead=(c,s,w)=>c.font=`${w||800} ${Math.round(s)}px 'Mukta'`;
 
 /* Devanagari-safe wrapping (whole-word, never per-glyph) */
 function wrapLines(c, text, maxw){
@@ -2099,13 +2102,21 @@ function glyphMotif(c,cx,cy,glyph,size){ c.save(); fDev(c,size); c.textAlign='le
 function yantraMotif(c,cx,cy,R){ c.save(); c.translate(cx,cy); c.strokeStyle='rgba(212,175,55,0.07)'; c.lineWidth=2;
   const tri=(up)=>{ c.beginPath(); for(let i=0;i<3;i++){ const a=(up?-Math.PI/2:Math.PI/2)+i*2*Math.PI/3; const x=Math.cos(a)*R, y=Math.sin(a)*R; i?c.lineTo(x,y):c.moveTo(x,y); } c.closePath(); c.stroke(); };
   tri(true); tri(false); c.beginPath(); c.arc(0,0,R*1.12,0,Math.PI*2); c.stroke(); c.restore(); }
+function diyaMotif(c,cx,cy,k){ c.save(); c.translate(cx,cy);
+  c.strokeStyle='rgba(212,175,55,0.10)'; c.lineWidth=4*k; c.fillStyle='rgba(212,175,55,0.05)';
+  c.beginPath(); c.ellipse(0,0,150*k,52*k,0,0,Math.PI); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(-150*k,0); c.lineTo(150*k,0); c.stroke();
+  c.beginPath(); c.moveTo(150*k,0); c.lineTo(205*k,-14*k); c.stroke();
+  c.fillStyle='rgba(240,207,107,0.12)';
+  c.beginPath(); c.moveTo(188*k,-12*k); c.quadraticCurveTo(168*k,-92*k,188*k,-150*k); c.quadraticCurveTo(214*k,-92*k,188*k,-12*k); c.fill();
+  c.restore(); }
 function motif(c,W,H,type){ const cx=W/2, cy=H*0.45, R=W*0.34;
   if(type==='mantra') glyphMotif(c,cx,cy,'ॐ',W*0.62);
   else if(type==='gita') ringMotif(c,cx,cy,R,16);
   else if(type==='gyan'||type==='prashna'||type==='carousel') lotusMotif(c,cx,cy,R);
   else if(type==='rashifal') ringMotif(c,cx,cy,R,12);
   else if(type==='tathya') yantraMotif(c,cx,cy,R*0.8);
-  else if(type==='upaya') glyphMotif(c,cx,cy,'🪔',W*0.42);
+  else if(type==='upaya') diyaMotif(c,W*0.5,H*0.72,W/1080);
   else ringMotif(c,cx,cy,R,8); }
 function paintBase(c,W,H,type){ const krishna=(type==='gita');
   const g=c.createLinearGradient(0,0,0,H);
@@ -2156,7 +2167,7 @@ function headBlocks(c,label,s,R){
 }
 /* hero (focal) — bright near-white, big, soft shadow, optional gold underline accent */
 function heroBlock(c,text,s,size,gap,maxwFrac,color,underline){
-  const maxw=W*(maxwFrac||0.84); fDev(c,size*s); const lines=wrapLines(c,text,maxw); const font=c.font; const lh=size*s*1.16;
+  const maxw=W*(maxwFrac||0.84); fHead(c,size*s); const lines=wrapLines(c,text,maxw); const font=c.font; const lh=size*s*1.16;
   const uh=underline?40*s:0;
   return {gap:gap||0,h:lines.length*lh+uh,draw:(cx,y)=>{ c.font=font; drawLinesCentered(c,lines,cx,y,size*s,lh,color||C.hero,true);
     if(underline){ const uy=y+lines.length*lh+18*s; c.save(); c.strokeStyle='rgba(212,175,55,0.62)'; c.lineWidth=3*s; const uw=170*s;
@@ -2273,7 +2284,7 @@ CARDS.gita={ id:'gita', label:'गीता', krishna:true, animatable:true,
       c.beginPath();c.arc(0,0,70*s*0.26,0,Math.PI*2);c.stroke();c.strokeStyle=C.gold;c.lineWidth=2.4;
       for(let i=0;i<16;i++){c.beginPath();c.rotate(Math.PI/8);c.moveTo(0,70*s*0.26);c.lineTo(0,70*s);c.stroke();} c.restore(); }}],
     [{gap:34*s,h:36*s,draw:(cx,y)=>{ fLab(c,32*s); centerOne(c,'श्रीमद्भगवद्गीता',cx,y+28*s,C.goldHi); }}],
-    [{gap:8*s,h:34*s,draw:(cx,y)=>{ fEng(c,30*s); centerOne(c,d.ref||'',cx,y+26*s,C.gold); }}],
+    [{gap:8*s,h:34*s,draw:(cx,y)=>{ fLab(c,30*s,600); centerOne(c,d.ref||'',cx,y+26*s,C.gold); }}],
     [verseBlock(c,d.shloka,s,52,36*s,'#FFF8E6')], [ruleBlock(s,30*s)],
     [bodyBlock(c,d.meaning,s,40,28*s,C.ink)] ];
     if(d.lesson) parts.push([heroBlock(c,'🪔 '+d.lesson,s,38,30,0.82,C.goldHi)]);
@@ -2308,7 +2319,7 @@ function quizFrame(c,d,s,st){
   parts.push([{gap:28*s,h:34*s,draw:(cx,y)=>{ fLab(c,32*s); centerOne(c,'सनातन क्विज',cx,y+28*s,C.gold); }}]);
   // progress pill + time pill side by side
   parts.push([{gap:16*s,h:48*s,draw:(cx,y)=>{
-    const prog='प्रश्न '+(DEV[st.qi]||st.qi+1)+' / '+(DEV[qs.length-1]||qs.length); const tlab='⏱ '+(q.time||5)+'s';
+    const prog='प्रश्न '+devNum(st.qi+1)+' / '+devNum(qs.length); const tlab='⏱ '+devNum(q.time||5)+'s';
     fLab(c,26*s); const pad=20*s,gp=14*s,h=44*s; const w1=c.measureText(prog).width+pad*2, w2=c.measureText(tlab).width+pad*2;
     let x=cx-(w1+gp+w2)/2;
     drawPill(c,x,y,w1,h,'rgba(212,175,55,0.14)','rgba(212,175,55,0.45)'); fLab(c,26*s); centerOne(c,prog,x+w1/2,y+h/2+9*s,C.goldHi); x+=w1+gp;
@@ -2325,10 +2336,10 @@ function quizFrame(c,d,s,st){
       if(correct){ g.addColorStop(0,`rgba(36,140,62,${0.5+0.3*a})`); g.addColorStop(1,`rgba(22,95,40,${0.5+0.3*a})`); }
       else { g.addColorStop(0,'rgba(42,52,104,0.55)'); g.addColorStop(1,'rgba(20,26,62,0.55)'); }
       c.fillStyle=g; roundRect(c,optL,y,optW,h,22*s); c.fill();
-      c.lineWidth=2.4; c.strokeStyle=correct?C.greenHi:'rgba(212,175,55,0.45)'; roundRect(c,optL,y,optW,h,22*s); c.stroke();
+      c.lineWidth=2.4; c.strokeStyle=correct?C.greenHi:OPTB[i]; roundRect(c,optL,y,optW,h,22*s); c.stroke();
       // filled badge (gold normally, green when correct) with dark letter
       const bx=optL+60*s, by=y+h/2;
-      c.beginPath(); c.fillStyle=correct?C.green:C.gold; c.arc(bx,by,34*s,0,Math.PI*2); c.fill();
+      c.beginPath(); c.fillStyle=correct?C.green:OPTC[i]; c.arc(bx,by,34*s,0,Math.PI*2); c.fill();
       fLab(c,34*s); centerOne(c,ABCD[i],bx,by+12*s,correct?'#EAFBE9':'#13183A');
       // option text — warm cream, clearly secondary to the white question
       c.font=font; c.textAlign='left'; c.fillStyle=correct?'#EFFDEC':'#ECE0C4';
@@ -2340,7 +2351,7 @@ function quizFrame(c,d,s,st){
     parts.push([{gap:38*s,h:86*s,draw:(cx,y)=>{ c.save(); c.translate(cx,y+43*s);
       c.strokeStyle='rgba(212,175,55,0.28)';c.lineWidth=6*s;c.beginPath();c.arc(0,0,37*s,0,Math.PI*2);c.stroke();
       c.strokeStyle=C.goldHi;c.lineWidth=6*s;c.beginPath();c.arc(0,0,37*s,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(st.countFrac||0,0,1));c.stroke();
-      fDev(c,46*s); centerOne(c,DEV[st.countdown-1]||String(st.countdown),0,16*s,C.goldHi); c.restore(); }}]);
+      fDev(c,46*s); centerOne(c,devNum(st.countdown),0,16*s,C.goldHi); c.restore(); }}]);
   }
   return assemble(parts);
 }
@@ -2431,23 +2442,20 @@ function drawVideoFrame(type,tSec,dur){ ctxRef=vctx; const card=CARDS[type]; vct
   if(card.isQuiz){ drawQuizVideo(type,tSec,dur); }
   else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; fitAndRender(vctx,W,H9,0.12,0.15,(s)=>card.build(vctx,state[type],s),{reveal,dy}); }
   footer(vctx,W,H9); }
-function quizTiming(d){ const qs=(d.questions||[]).slice(0,5); const intro=1.0; const times=qs.map(q=>Math.max(2,q.time||5)); const total=intro+times.reduce((a,b)=>a+b,0); return {qs,n:qs.length,intro,times,dur:Math.min(60,total)}; }
-function drawQuizVideo(type,t,dur){ const d=state[type]; const{n,intro,times}=quizTiming(d);
+function quizTiming(d){ const qs=(d.questions||[]).slice(0,5); const intro=1.0; const wins=qs.map(q=>0.5+Math.max(2,q.time||5)+1.3); const total=intro+wins.reduce((a,b)=>a+b,0); return {qs,n:qs.length,intro,wins,dur:Math.min(70,total)}; }
+function drawQuizVideo(type,t,dur){ const d=state[type]; const{qs,intro,wins}=quizTiming(d);
   if(t<intro){ const a=clamp(t/0.5,0,1); fitAndRender(vctx,W,H9,0.12,0.15,(s)=>assemble([
     [{gap:0,h:130*s,draw:(cx,y)=>chakra(vctx,cx,y+65*s,65*s,true)}],
     [heroBlock(vctx,'सनातन क्विज!',s,76,40,0.84,C.hero)] ]),{reveal:a,dy:(1-a)*36}); return; }
   let local=t-intro, acc=0, qi=0;
-  for(qi=0; qi<times.length; qi++){ if(local < acc+times[qi]) break; acc+=times[qi]; }
-  if(qi>=times.length) qi=times.length-1;
-  const into=local-acc, per=times[qi];
-  const slide=clamp(into/0.4,0,1);
-  const revealStart=Math.max(per*0.55, per-1.6);
-  const reveal=into>=revealStart?clamp((into-revealStart)/0.35,0,1):0;
-  let countdown=null,countFrac=0;
-  if(reveal===0){ const cdStart=0.7, cdTotal=revealStart-cdStart, cdElapsed=into-cdStart;
-    if(cdElapsed>0 && cdTotal>0){ countdown=Math.max(1,Math.ceil((cdTotal-cdElapsed)/(cdTotal/3))); countFrac=clamp(cdElapsed/cdTotal,0,1); } }
+  for(qi=0; qi<wins.length; qi++){ if(local<acc+wins[qi]) break; acc+=wins[qi]; }
+  if(qi>=wins.length) qi=wins.length-1;
+  const into=local-acc; const sel=Math.max(2,(qs[qi]&&qs[qi].time)||5);
+  const slide=clamp(into/0.4,0,1); const countStart=0.5, countEnd=countStart+sel;
+  let reveal=0, countdown=null, countFrac=0;
+  if(into<countEnd){ countdown=Math.max(1,Math.ceil(countEnd-into)); countFrac=clamp((into-countStart)/sel,0,1); if(into<countStart){ countdown=Math.ceil(sel); countFrac=0; } }
+  else { reveal=clamp((into-countEnd)/0.4,0,1); }
   fitAndRender(vctx,W,H9,0.12,0.15,(s)=>quizFrame(vctx,d,s,{qi,reveal,countdown,countFrac}),{reveal:slide,dy:(1-slide)*30}); }
-
 let lastBlob=null,lastUrl=null,lastMime='video/mp4',lastExt='mp4';
 async function pickCodec(){ if(!('VideoEncoder'in window))return null;
   for(const codec of ['avc1.640028','avc1.42E028','avc1.4D0028','avc1.640020','avc1.42001f']){
@@ -2496,7 +2504,8 @@ vsave.onclick=async()=>{ if(!lastBlob)return; const file=new File([lastBlob],'vi
 
 /* ============================ CONTENT TOOLS ============================ */
 const ioBox=document.getElementById('ioBox'),ioHint=document.getElementById('ioHint');
-function copy(text,msg){ ioBox.value=text; if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>flash(msg)).catch(()=>{ioBox.select();flash(msg);}); } else { ioBox.select(); document.execCommand('copy'); flash(msg); } }
+function copy(text,msg){ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(()=>flash(msg)).catch(()=>fbCopy(text,msg)); } else fbCopy(text,msg); }
+function fbCopy(text,msg){ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;top:-1000px;opacity:0;'; document.body.appendChild(ta); ta.focus(); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); flash(msg); }
 function flash(m){ ioHint.textContent=m; setTimeout(()=>ioHint.textContent='सुझाव: AI को जवाफ बाकसमा टाँसेर Smart Paste थिच्नुहोस्।',2600); }
 document.getElementById('btnPrompt').onclick=()=>{ if(activeType==='carousel')return; copy(CARDS[activeType].prompt(state[activeType]),'✅ AI Prompt कपी भयो — ChatGPT/Gemini मा टाँस्नुहोस्।'); };
 function doSmartParse(){ if(activeType==='carousel'){flash('क्यारौसेलमा Smart Paste छैन।');return;}
@@ -2543,7 +2552,7 @@ function drawCaroSlide(c,sl,idx,count){ ctxRef=c; c.clearRect(0,0,W,H1); paintBa
     [ruleBlock(s,30*s)], [heroBlock(c,sl.text,s,56,34,0.86,C.hero)] ]),{}); }
   else { fitAndRender(c,W,H1,0.12,0.15,(s)=>{ const acts=['👍 Like','💬 Comment','🔖 Save','↗️ Share','➕ Follow'];
     const parts=[ [{gap:0,h:90*s,draw:(cx,y)=>chakra(c,cx,y+45*s,45*s,true)}], [heroBlock(c,'मन पर्‍यो? 🙏',s,72,40)] ];
-    acts.forEach((a,i)=>parts.push([{gap:i?14*s:30*s,h:54*s,draw:(cx,y)=>{ fDev(c,46*s); centerOne(c,a,cx,y+40*s,C.goldHi); }}]));
+    acts.forEach((a,i)=>parts.push([{gap:i?14*s:30*s,h:54*s,draw:(cx,y)=>{ fLab(c,46*s,600); centerOne(c,a,cx,y+40*s,C.goldHi); }}]));
     parts.push([{gap:34*s,h:44*s,draw:(cx,y)=>{ fEng(c,34*s); centerOne(c,'@vidhichakra',cx,y+34*s,C.gold); }}]);
     return assemble(parts); },{}); }
   footer(c,W,H1);
@@ -2556,7 +2565,8 @@ async function preloadFonts(){ try{ await Promise.all([
   document.fonts.load("400 80px 'Tiro Devanagari Sanskrit'"),
   document.fonts.load("400 40px 'EB Garamond'"),
   document.fonts.load("italic 400 40px 'EB Garamond'"),
-  document.fonts.load("700 40px 'Philosopher'") ]); }catch(e){} if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } }
+  document.fonts.load("700 40px 'Philosopher'"),
+  document.fonts.load("800 80px 'Mukta'"), document.fonts.load("700 40px 'Mukta'"), document.fonts.load("600 40px 'Mukta'") ]); }catch(e){} if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } }
 async function init(){ await preloadFonts(); buildPanel(activeType); renderPreview(); setTimeout(()=>{ if(activeType!=='carousel') renderPreview(); else renderCaro(curSlide); },180); }
 if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded',init);
 
