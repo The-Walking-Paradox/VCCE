@@ -6,7 +6,7 @@
 <title>विधि चक्र · Content Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Mukta:wght@500;600;700;800&family=Philosopher:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Mukta:wght@500;600;700;800&family=Baloo+2:wght@500;600;700&family=Rozha+One&family=Kalam:wght@400;700&family=Khand:wght@500;600;700&family=Philosopher:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --base-0:#0A0E27; --base-1:#1A1F4D;
@@ -2043,6 +2043,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const DEV=['१','२','३','४','५','६','७','८'];
 const ABCD=['A','B','C','D'];
 const KAKHA=['क','ख','ग','घ'];
+const JCOL=['#26367A','#B0341F','#1B6E38','#6B4A1E','#5A3E8E'];
 const OPTC=['#D4AF37','#3BA7A0','#D873A0','#8E86E0'];
 const OPTB=['rgba(212,175,55,0.55)','rgba(59,167,160,0.55)','rgba(216,115,160,0.55)','rgba(142,134,224,0.55)'];
 const UA=navigator.userAgent||'';
@@ -2055,6 +2056,7 @@ const cv = document.getElementById('card');
 const ctx = cv.getContext('2d');
 const vcv = document.createElement('canvas'); vcv.width=W; vcv.height=H9;
 const vctx = vcv.getContext('2d');
+const bgCache={};
 
 /* font helpers (size only; family+weight baked) */
 const fDev =(c,s)=>c.font=`400 ${Math.round(s)}px 'Tiro Devanagari Sanskrit'`;
@@ -2062,6 +2064,9 @@ const fEng =(c,s)=>c.font=`400 ${Math.round(s)}px 'EB Garamond'`;
 const fEngI=(c,s)=>c.font=`italic 400 ${Math.round(s)}px 'EB Garamond'`;
 const fLab =(c,s,w)=>c.font=`${w||700} ${Math.round(s)}px 'Mukta'`;
 const fHead=(c,s,w)=>c.font=`${w||800} ${Math.round(s)}px 'Mukta'`;
+const TEXTFONTS={ tiro:{n:'परम्परागत · Tiro',fam:'Tiro Devanagari Sanskrit',w:'400'}, mukta:{n:'आधुनिक · Mukta',fam:'Mukta',w:'600'}, baloo:{n:'बोल्ड गोलो · Baloo 2',fam:'Baloo 2',w:'600'}, rozha:{n:'सुन्दर · Rozha One',fam:'Rozha One',w:'400'}, kalam:{n:'हस्तलेखन · Kalam',fam:'Kalam',w:'700'}, khand:{n:'कन्डेन्स्ड · Khand',fam:'Khand',w:'600'} };
+function setTextFont(c,size,key){ const f=TEXTFONTS[key]||TEXTFONTS.tiro; c.font=`${f.w} ${Math.round(size)}px '${f.fam}'`; }
+const TEXTCOLORS={ ink:{n:'खैरो स्याही',c:'#241407'}, black:{n:'कालो',c:'#161212'}, crimson:{n:'रातो',c:'#9E2B25'}, navy:{n:'गाढा नीलो',c:'#1E2A63'}, green:{n:'गाढा हरियो',c:'#1B5E36'}, purple:{n:'बैजनी',c:'#5A3E8E'} };
 
 /* Devanagari-safe wrapping (whole-word, never per-glyph) */
 function wrapLines(c, text, maxw){
@@ -2123,7 +2128,27 @@ function motif(c,W,H,type){ const cx=W/2, cy=H*0.45, R=W*0.34;
   else if(type==='tathya') yantraMotif(c,cx,cy,R*0.8);
   else if(type==='upaya') diyaMotif(c,W*0.5,H*0.72,W/1080);
   else ringMotif(c,cx,cy,R,8); }
-function paintBase(c,W,H,type){ const krishna=(type==='gita');
+function paintPaper(c,W,H){
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FAF2DE'); g.addColorStop(1,'#E8D9B6'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  const r=mulberry(77); c.save(); const n=Math.round(W*H/9000); for(let i=0;i<n;i++){ const x=r()*W,y=r()*H; c.fillStyle='rgba(120,90,40,'+(0.02+r()*0.03).toFixed(3)+')'; c.fillRect(x,y,2,2);} c.restore();
+  c.strokeStyle='rgba(110,140,165,0.22)'; c.lineWidth=2; for(let y=H*0.135; y<H*0.92; y+=72){ c.beginPath(); c.moveTo(W*0.06,y); c.lineTo(W*0.94,y); c.stroke(); }
+  c.strokeStyle='rgba(200,90,80,0.42)'; c.lineWidth=3; c.beginPath(); c.moveTo(W*0.12,H*0.105); c.lineTo(W*0.12,H*0.93); c.stroke();
+  c.save(); const ringY=H*0.052; for(let i=0;i<13;i++){ const x=W*0.10+i*(W*0.80/12);
+    c.strokeStyle='rgba(90,80,70,0.45)'; c.lineWidth=9; c.beginPath(); c.arc(x,ringY,17,Math.PI*0.08,Math.PI*0.92,false); c.stroke();
+    c.strokeStyle='rgba(190,168,120,0.75)'; c.lineWidth=5; c.beginPath(); c.arc(x,ringY-3,15,Math.PI*1.05,Math.PI*1.95,false); c.stroke(); }
+  c.restore();
+  const v=c.createRadialGradient(W/2,H/2,W*0.32,W/2,H/2,W*0.88); v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(80,50,10,0.12)'); c.fillStyle=v; c.fillRect(0,0,W,H);
+}
+function paintLokta(c,W,H){
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#F2E6C6'); g.addColorStop(1,'#DCC79A'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  const r=mulberry(133); c.save(); const n=Math.round(W*H/2600);
+  for(let i=0;i<n;i++){ const x=r()*W,y=r()*H,len=2+r()*11,ang=r()*Math.PI; c.strokeStyle='rgba(110,80,40,'+(0.025+r()*0.05).toFixed(3)+')'; c.lineWidth=1; c.beginPath(); c.moveTo(x,y); c.lineTo(x+Math.cos(ang)*len,y+Math.sin(ang)*len); c.stroke(); } c.restore();
+  const r2=mulberry(909); for(let i=0;i<7;i++){ const x=r2()*W,y=r2()*H,rad=120+r2()*260; const st=c.createRadialGradient(x,y,0,x,y,rad); st.addColorStop(0,'rgba(120,85,40,0.06)'); st.addColorStop(1,'rgba(120,85,40,0)'); c.fillStyle=st; c.fillRect(0,0,W,H); }
+  c.strokeStyle='rgba(120,80,35,0.5)'; c.lineWidth=2.6; c.strokeRect(W*0.05,H*0.045,W*0.90,H*0.91);
+  c.strokeStyle='rgba(120,80,35,0.26)'; c.lineWidth=1.4; c.strokeRect(W*0.05+13,H*0.045+13,W*0.90-26,H*0.91-26);
+  const v=c.createRadialGradient(W/2,H/2,W*0.30,W/2,H/2,W*0.85); v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(70,45,10,0.18)'); c.fillStyle=v; c.fillRect(0,0,W,H);
+}
+function paintBase(c,W,H,type){ if(type==='jeevan'){ paintPaper(c,W,H); return; } if(type==='prerana'){ paintLokta(c,W,H); return; } const krishna=(type==='gita');
   const g=c.createLinearGradient(0,0,0,H);
   if(krishna){ g.addColorStop(0,C.krishna0); g.addColorStop(.55,'#16286A'); g.addColorStop(1,C.krishna1); }
   else { g.addColorStop(0,'#070B22'); g.addColorStop(.5,'#121739'); g.addColorStop(1,'#1C2250'); }
@@ -2154,7 +2179,7 @@ function chakra(c,cx,cy,R,glow){
   c.restore();
 }
 function diamond(c,cx,cy,sz){ c.save(); c.translate(cx,cy); c.rotate(Math.PI/4); c.fillStyle=C.gold; c.fillRect(-sz/2,-sz/2,sz,sz); c.restore(); }
-function footer(c,W,H){ fLab(c,27); centerOne(c,'विधि चक्र    ·    @vidhichakra', W/2, H-66, 'rgba(240,207,107,0.62)'); }
+function footer(c,W,H,paper){ fLab(c,27); centerOne(c,'विधि चक्र    ·    @vidhichakra', W/2, H-66, paper?'rgba(120,80,25,0.6)':'rgba(240,207,107,0.62)'); }
 
 /* header: chakra crown + gold label flanked by rules (no letter-spacing) */
 function headBlocks(c,label,s,R){
@@ -2213,7 +2238,7 @@ function fitAndRender(c,W,H,topF,botF,buildFn,opt){
   let s=1, b=buildFn(s);
   if(b.total>avail){ s=Math.max(0.56, avail/b.total); b=buildFn(s);
     if(b.total>avail){ s=Math.max(0.5, s*avail/b.total); b=buildFn(s); } }
-  let y=top + Math.max(0,(avail-b.total))/2;
+  let y=opt.top ? top : top + Math.max(0,(avail-b.total))/2;
   c.save(); c.globalAlpha=clamp(reveal,0,1); c.translate(0,dy);
   for(const bl of b.blocks){ y+=bl.gap||0; bl.draw(W/2,y,s); y+=bl.h; }
   c.restore();
@@ -2267,7 +2292,7 @@ CARDS.rashifal={ id:'rashifal', label:'राशिफल', animatable:true,
       parts.push([{gap:42*s,h:38*s,draw:(cx,y)=>{c.font=font; centerOne(c,line,cx,y+30*s,C.gold);}}]); }
     return assemble(parts); },
   prompt:()=>`नेपाली ज्योतिषी भएर आजको "राशिफल" बनाउनुहोस्:\nराशि: <राशिको नाम>\nभविष्यवाणी: <३-४ वाक्य>\nसंकेत: शुभ रङ, शुभ अंक, ग्रह (कमाले छुट्याउनुहोस्)`,
-  parse(t){const d={keywords:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/राशि\b/.test(k))d.sign=v;else if(/भविष्य|prediction/i.test(k))d.prediction=v;else if(/संकेत|keyword/i.test(k))d.keywords=v.split(/[,·]/).map(x=>x.trim()).filter(Boolean);});return d;},
+  parse(t){const d={keywords:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/भविष्य|prediction/i.test(k))d.prediction=v;else if(/संकेत|keyword|शुभ|ग्रह/i.test(k))d.keywords=v.split(/[,·]/).map(x=>x.trim()).filter(Boolean);else if(/राशि|sign/i.test(k))d.sign=v;});return d;},
   caption:d=>`${d.sign||'आजको राशिफल'} ✨\n\n${d.prediction||''}\n\n${(d.keywords||[]).join(' · ')}\n\nतपाईंको राशि कुन हो? Comment 👇 दैनिक राशिफलका लागि Follow र Save गर्नुहोस्।\n\n#राशिफल #Rashifal #Horoscope #VidhiChakra #Astrology #Nepal` };
 
 CARDS.tathya={ id:'tathya', label:'तथ्य', animatable:true,
@@ -2280,6 +2305,55 @@ CARDS.tathya={ id:'tathya', label:'तथ्य', animatable:true,
   prompt:()=>`नेपाली ज्योतिषी भएर रोचक "तथ्य" कार्ड बनाउनुहोस्:\nअंक: <संख्या/प्रतीक>\nशीर्षक: <छोटो प्रश्न/शीर्षक>\nतथ्य: <२-३ वाक्य>`,
   parse(t){const d={};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/अंक|number/i.test(k))d.number=v;else if(/शीर्षक|heading/i.test(k))d.heading=v;else if(/तथ्य|fact/i.test(k))d.fact=v;});return d;},
   caption:d=>`${d.heading||'रोचक तथ्य'} — ${d.number||''} 🤯\n\n${d.fact||''}\n\nथाहा थियो? Comment 👇 यस्ता तथ्यका लागि Follow र Save गर्नुहोस्।\n\n#रोचकतथ्य #DidYouKnow #VidhiChakra #SanatanDharma #Nepal` };
+
+CARDS.jeevan={ id:'jeevan', label:'जीवन', animatable:true,
+  sample:()=>({title:'कठोर सत्य',font:'mukta',color:'multi',lines:[
+    'जब पैसा हुँदैन, नाताले वास्ता गर्दैन र साथीले सहयोग गर्दैन।',
+    'संसार सुखमा अगाडि बढ्छ, तर दुःखमा पछाडि हट्छ।',
+    'अस्पताललाई पैसा चाहिन्छ, पीडा होइन — सम्बन्ध पनि उस्तै भएको छ।',
+    'जसले आज तिम्रो मजाक उडाउँछ, भोलि त्यसको ठाउँमा तिमी पनि हुन सक्छौ।',
+    'सफलता ढिलो आउँछ, तर आउँछ — हरेस नखाऊ।'],
+    closing:'समय सबैको आउँछ — धैर्य राख र असल बन।'}),
+  build(c,d,s){ const parts=[]; const colL=W*0.165, wrapw=W*0.905-colL;
+    // emotive title in a highlighter box + underline (centered)
+    fHead(c,82*s); const tl=wrapLines(c,d.title||'',W*0.76); const tfont=c.font; const tlh=82*s*1.12;
+    parts.push([{gap:0,h:tl.length*tlh+34*s,draw:(cx,y)=>{ c.font=tfont; c.textAlign='left';
+      tl.forEach((ln,i)=>{ const w=c.measureText(ln).width; const ly=y+82*s*0.82+i*tlh; c.fillStyle='rgba(247,205,80,0.6)'; roundRect(c,cx-w/2-20*s,ly-60*s,w+40*s,76*s,12*s); c.fill(); });
+      tl.forEach((ln,i)=>{ const w=c.measureText(ln).width; const ly=y+82*s*0.82+i*tlh; c.fillStyle='#B0341F'; c.fillText(ln,cx-w/2,ly); });
+      const uy=y+tl.length*tlh+12*s; c.strokeStyle='#B0341F'; c.lineWidth=5*s; c.beginPath(); c.moveTo(cx-130*s,uy); c.lineTo(cx+130*s,uy); c.stroke(); }}]);
+    // statements: left-aligned, color-coded, bulleted (high readability)
+    (d.lines||[]).slice(0,6).forEach((ln,i)=>{ setTextFont(c,47*s,d.font||'mukta'); const col=(d.color&&d.color!=='multi'&&TEXTCOLORS[d.color])?TEXTCOLORS[d.color].c:JCOL[i%JCOL.length]; const lines=wrapLines(c,ln,wrapw-34*s); const font=c.font; const lh=47*s*1.4;
+      parts.push([{gap:i===0?62*s:38*s,h:lines.length*lh,draw:(cx,y)=>{ c.font=font; c.textAlign='left';
+        c.fillStyle=col; c.beginPath(); c.arc(colL,y+47*s*0.42,9*s,0,Math.PI*2); c.fill();
+        c.fillStyle=col; lines.forEach((l,j)=>c.fillText(l,colL+32*s,y+47*s*0.82+j*lh)); }}]); });
+    // closing takeaway (centered, bold brown)
+    if(d.closing){ fHead(c,46*s,800); const cl=wrapLines(c,'“'+d.closing+'”',W*0.8); const font=c.font; const lh=46*s*1.3;
+      parts.push([{gap:58*s,h:cl.length*lh,draw:(cx,y)=>{ c.font=font; c.textAlign='left'; c.fillStyle='#7A4A1E'; cl.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+46*s*0.82+j*lh); }); }}]); }
+    return assemble(parts); },
+  prompt:()=>`नेपालीमा relatable "जीवन सत्य"/motivational पोस्ट बनाउनुहोस् (धार्मिक होइन, साधारण जीवनसँग सम्बन्धित)। यो ढाँचामा:\nशीर्षक: <छोटो भावनात्मक शीर्षक>\nवाक्य: <relatable सत्य १>\nवाक्य: <relatable सत्य २>\nवाक्य: <relatable सत्य ३>\nवाक्य: <relatable सत्य ४>\nवाक्य: <relatable सत्य ५>\nनिष्कर्ष: <एक वाक्यको सार>`,
+  parse(t){const d={lines:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/शीर्षक|title/i.test(k))d.title=v;else if(/निष्कर्ष|सार|conclusion/i.test(k))d.closing=v;else if(/वाक्य|सत्य|बुँदा|line|point/i.test(k))d.lines.push(v);});return d;},
+  caption:d=>`${d.title||'जीवन सत्य'} 💯\n\n${(d.lines||[]).join('\n\n')}\n\n${d.closing?'“'+d.closing+'”':''}\n\nतपाईंलाई कुन कुरा relate भयो? Comment 👇 यस्तै कुराका लागि Follow र Save गर्नुहोस्।\n\n#जीवन #LifeQuotes #Nepali #VidhiChakra #Motivation #NepaliQuotes` };
+
+CARDS.prerana={ id:'prerana', label:'प्रेरणा', animatable:true,
+  sample:()=>({title:'छोड्न सिक',
+    body:'जीवनमा कहिलेकाहीँ केही कुरा छोड्नु नै राम्रो हुन्छ — त्यो प्रश्न जसको उत्तर कहिल्यै भेटिँदैन, त्यो हात जुन समयमा साथ दिँदैन, र त्यो सम्बन्ध जहाँ हाम्रो कुनै महत्त्व हुँदैन। छोड्न सिक्नु हार होइन; आफूलाई माया गर्न सिक्नु हो।',
+    author:'विधि चक्र',font:'tiro',color:'ink'}),
+  build(c,d,s){ const parts=[];
+    // TITLE — fixed style (crimson ink Tiro serif + manuscript rules), text comes from parse
+    fDev(c,86*s); const tl=wrapLines(c,d.title||'',W*0.76); const tfont=c.font; const tlh=86*s*1.12;
+    parts.push([{gap:0,h:tl.length*tlh+50*s,draw:(cx,y)=>{ c.font=tfont; c.textAlign='left';
+      c.strokeStyle='#9E2B25'; c.lineWidth=3*s; c.beginPath(); c.moveTo(cx-160*s,y-4*s); c.lineTo(cx+160*s,y-4*s); c.stroke();
+      tl.forEach((ln,i)=>{ const w=c.measureText(ln).width; c.fillStyle='#9E2B25'; c.fillText(ln,cx-w/2,y+86*s*0.82+i*tlh); });
+      const by=y+tl.length*tlh+20*s; c.beginPath(); c.moveTo(cx-160*s,by); c.lineTo(cx+160*s,by); c.stroke();
+      c.save(); c.translate(cx,by); c.rotate(Math.PI/4); c.fillStyle='#9E2B25'; c.fillRect(-7*s,-7*s,14*s,14*s); c.restore(); }}]);
+    // BODY — one flowing ink paragraph (fixed sepia, Tiro serif), left-aligned for readability
+    setTextFont(c,50*s,d.font||'tiro'); const lx=W*0.10; const bl=wrapLines(c,d.body||'',W*0.80); const bfont=c.font; const blh=50*s*1.5;
+    parts.push([{gap:58*s,h:bl.length*blh,draw:(cx,y)=>{ c.font=bfont; c.textAlign='left'; c.fillStyle=(TEXTCOLORS[d.color]||{c:'#241407'}).c; bl.forEach((l,j)=>c.fillText(l,lx,y+50*s*0.82+j*blh)); }}]);
+    if(d.author){ fEngI(c,34*s); const af=c.font; parts.push([{gap:50*s,h:44*s,draw:(cx,y)=>{ c.font=af; c.textAlign='left'; const t='— '+d.author; const w=c.measureText(t).width; c.fillStyle='#7A5A38'; c.fillText(t,cx-w/2,y+30*s); }}]); }
+    return assemble(parts); },
+  prompt:()=>`नेपालीमा एउटा गहिरो, भावुक "प्रेरणादायी विचार/कथा" लेख्नुहोस् (relatable; धार्मिक नभए पनि हुन्छ)। यो ढाँचामा:\nशीर्षक: <छोटो भावुक शीर्षक, जस्तै "छोड्न सिक">\nविचार: <१ अनुच्छेद, ४-६ वाक्यको प्रवाहमय प्रेरणादायी विचार>`,
+  parse(t){const d={};const g=re=>{const m=t.match(re);return m?m[1].trim():''};d.title=g(/शीर्षक\s*:(.*)/);const bm=t.match(/विचार\s*:([\s\S]*?)(?:लेखक\s*:|$)/);if(bm)d.body=bm[1].trim();d.author=g(/लेखक\s*:(.*)/)||'विधि चक्र';return d;},
+  caption:d=>`${d.title||'प्रेरणा'} 🥀\n\n${d.body||''}\n\n${d.author?'— '+d.author:''}\n\nमन छुने लाग्यो? Comment 👇 यस्तै प्रेरणादायी विचारका लागि Follow र Save गर्नुहोस्।\n\n#प्रेरणा #Motivation #NepaliQuotes #VidhiChakra #जीवन #LifeLessons` };
 
 CARDS.gita={ id:'gita', label:'गीता', krishna:true, animatable:true,
   sample:()=>({ref:'अध्याय २ · श्लोक ४७',shloka:'कर्मण्येवाधिकारस्ते\nमा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्\nमा ते सङ्गोऽस्त्वकर्मणि॥',meaning:'तिम्रो अधिकार कर्ममा मात्र छ, फलमा कहिल्यै होइन। कर्मको फलको कारण तिमी नबन, कर्म नगर्नेतिर पनि आसक्त नहोऊ।',lesson:'फलको चिन्ता त्यागेर निष्काम कर्म गर — यही गीताको सार हो।'}),
@@ -2370,15 +2444,18 @@ function drawPill(c,x,y,w,h,fill,stroke){ c.fillStyle=fill; roundRect(c,x,y,w,h,
 const state={}; let activeType='gyan';
 Object.keys(CARDS).forEach(k=>state[k]=CARDS[k].sample());
 function renderTo(c,W,H,type,opt){ ctxRef=c; const card=CARDS[type]; c.clearRect(0,0,W,H); paintBase(c,W,H,type);
-  fitAndRender(c,W,H,0.12,0.15,(s)=>card.build(c,state[type],s),opt); footer(c,W,H); }
+  const paper=(type==='jeevan'||type==='prerana'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15;
+  fitAndRender(c,W,H,tf,bf,(s)=>card.build(c,state[type],s),Object.assign({top:(type==='jeevan')},opt||{})); footer(c,W,H,paper); }
 function renderPreview(){ renderTo(ctx,W,H9,activeType,{reveal:1,dy:0}); }
 
 /* ============================ TABS + PANELS ============================ */
 const tabsEl=document.getElementById('tabs');
-const order=['gyan','upaya','prashna','mantra','rashifal','tathya','gita','quiz','carousel'];
-const LABELS={gyan:'ज्ञान',upaya:'उपाय',prashna:'प्रश्न',mantra:'मन्त्र',rashifal:'राशिफल',tathya:'तथ्य',gita:'गीता',quiz:'क्विज',carousel:'क्यारौसेल'};
+const order=['gyan','upaya','prashna','mantra','rashifal','tathya','jeevan','prerana','gita','quiz','carousel'];
+const LABELS={gyan:'ज्ञान',upaya:'उपाय',prashna:'प्रश्न',mantra:'मन्त्र',rashifal:'राशिफल',tathya:'तथ्य',jeevan:'जीवन',prerana:'प्रेरणा',gita:'गीता',quiz:'क्विज',carousel:'क्यारौसेल'};
 order.forEach(k=>{ const t=document.createElement('div'); t.className='tab'+(k===activeType?' on':''); t.textContent=LABELS[k]; t.dataset.k=k; t.onclick=()=>selectTab(k); tabsEl.appendChild(t); });
 function selectTab(k){ activeType=k; [...tabsEl.children].forEach(t=>t.classList.toggle('on',t.dataset.k===k));
+  const iob=document.getElementById('ioBox'); if(iob) iob.value='';
+  const ioh=document.getElementById('ioHint'); if(ioh) ioh.textContent='सुझाव: AI को जवाफ बाकसमा टाँसेर "फिल्ड भर्नुहोस्" थिच्नुहोस्।';
   if(k==='carousel'){ showCarousel(true); } else { showCarousel(false); buildPanel(k); renderPreview(); } }
 
 const panel=document.getElementById('panel');
@@ -2412,6 +2489,17 @@ function quizEditor(d,onchange){ const wrap=document.createElement('div'); wrap.
     if(d.questions.length<5){ const add=document.createElement('button'); add.className='mini'; add.textContent='+ प्रश्न थप्नुहोस्'; add.onclick=()=>{d.questions.push({q:'',opts:['','','',''],correct:0,time:5});onchange();redraw();}; wrap.appendChild(add); } }
   redraw(); return wrap; }
 
+function fontSelect(d,re){ const w=document.createElement('div'); w.className='field';
+  const l=document.createElement('label'); l.textContent='अक्षर शैली · Font'; w.appendChild(l);
+  const sel=document.createElement('select'); sel.style.cssText="font-family:Mukta;font-size:15px;color:#F0E6D2;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:10px 11px;";
+  Object.keys(TEXTFONTS).forEach(key=>{ const o=document.createElement('option'); o.value=key; o.textContent=TEXTFONTS[key].n; o.style.color='#111'; if((d.font||'tiro')===key)o.selected=true; sel.appendChild(o); });
+  sel.onchange=()=>{ d.font=sel.value; re(); }; w.appendChild(sel); return w; }
+function colorSelect(d,re,withMulti){ const w=document.createElement('div'); w.className='field';
+  const l=document.createElement('label'); l.textContent='रङ · Color'; w.appendChild(l);
+  const sel=document.createElement('select'); sel.style.cssText="font-family:Mukta;font-size:15px;color:#F0E6D2;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:10px 11px;";
+  if(withMulti){ const o=document.createElement('option'); o.value='multi'; o.textContent='रंगीन · Multi'; o.style.color='#111'; if((d.color||'multi')==='multi')o.selected=true; sel.appendChild(o); }
+  Object.keys(TEXTCOLORS).forEach(key=>{ const o=document.createElement('option'); o.value=key; o.textContent=TEXTCOLORS[key].n; o.style.color='#111'; if(d.color===key)o.selected=true; sel.appendChild(o); });
+  sel.onchange=()=>{ d.color=sel.value; re(); }; w.appendChild(sel); return w; }
 function buildPanel(k){ panel.innerHTML=''; const d=state[k];
   const title=document.createElement('div'); title.className='sec-title'; title.textContent=LABELS[k]+' · सम्पादन'; panel.appendChild(title);
   const re=()=>renderPreview();
@@ -2421,15 +2509,21 @@ function buildPanel(k){ panel.innerHTML=''; const d=state[k];
   else if(k==='mantra'){ panel.appendChild(fld('मन्त्र (Enter ले लाइन तोड्नुहोस्)',d.mantra,v=>{d.mantra=v;re();},4)); panel.appendChild(fld('अर्थ',d.meaning,v=>{d.meaning=v;re();},4)); }
   else if(k==='rashifal'){ panel.appendChild(fld('राशि',d.sign,v=>{d.sign=v;re();})); panel.appendChild(fld('भविष्यवाणी',d.prediction,v=>{d.prediction=v;re();},4)); panel.appendChild(listEditor('संकेत',d.keywords,re,4)); }
   else if(k==='tathya'){ panel.appendChild(fld('अंक/संख्या',d.number,v=>{d.number=v;re();})); panel.appendChild(fld('शीर्षक',d.heading,v=>{d.heading=v;re();})); panel.appendChild(fld('तथ्य',d.fact,v=>{d.fact=v;re();},4)); }
+  else if(k==='jeevan'){ panel.appendChild(fld('शीर्षक',d.title,v=>{d.title=v;re();})); panel.appendChild(fontSelect(d,re)); panel.appendChild(colorSelect(d,re,true)); panel.appendChild(listEditor('वाक्यहरू / सत्यहरू',d.lines,re,6)); panel.appendChild(fld('निष्कर्ष (सार)',d.closing,v=>{d.closing=v;re();},2)); }
+  else if(k==='prerana'){ panel.appendChild(fld('शीर्षक',d.title,v=>{d.title=v;re();})); panel.appendChild(fontSelect(d,re)); panel.appendChild(colorSelect(d,re,false)); panel.appendChild(fld('विचार (अनुच्छेद)',d.body,v=>{d.body=v;re();},6)); panel.appendChild(fld('लेखक/स्रोत',d.author,v=>{d.author=v;re();})); }
   else if(k==='gita'){ panel.appendChild(fld('सन्दर्भ',d.ref,v=>{d.ref=v;re();})); panel.appendChild(fld('श्लोक',d.shloka,v=>{d.shloka=v;re();},4)); panel.appendChild(fld('अर्थ',d.meaning,v=>{d.meaning=v;re();},3)); panel.appendChild(fld('शिक्षा',d.lesson,v=>{d.lesson=v;re();},2)); }
   else if(k==='quiz'){ panel.appendChild(quizEditor(d,re)); }
 }
 
 /* ============================ PNG ============================ */
-document.getElementById('btnPng').onclick=()=>{ let name;
-  if(activeType==='carousel'){ renderCaro(curSlide); name='vidhi-carousel-slide-'+(curSlide+1)+'.png'; }
-  else { renderPreview(); name='vidhi-chakra-'+activeType+'.png'; }
-  cv.toBlob(b=>{ if(b) openImageSaver(b,name); }, 'image/png'); };
+document.getElementById('btnPng').onclick=()=>{ try{
+  const paper=(activeType==='jeevan'||activeType==='prerana');
+  const mime=paper?'image/jpeg':'image/png', ext=paper?'jpg':'png';
+  if(activeType==='carousel'){ renderCaro(curSlide); } else { renderPreview(); }
+  const name='vidhi-chakra-'+activeType+'.'+ext;
+  cv.toBlob(b=>{ if(b) openImageSaver(b,name,mime,ext); else pngError('तस्बिर encode हुन सकेन'); }, mime, paper?0.92:undefined);
+  }catch(e){ pngError((e&&e.message)||String(e)); } };
+function pngError(msg){ modal.classList.add('on'); vbarwrap.style.display='none'; vpreview.style.display='none'; vimg.style.display='none'; vsave.style.display='none'; vdl.style.display='none'; vtitle.textContent='सेभ त्रुटि'; vstatus.textContent='तस्बिर बनाउन सकिएन: '+msg; }
 
 /* ============================ VIDEO ============================ */
 const modal=document.getElementById('vmodal');
@@ -2437,19 +2531,21 @@ const vbar=document.getElementById('vbar'),vstatus=document.getElementById('vsta
 const vpreview=document.getElementById('vpreview'),vsave=document.getElementById('vsave'),vdl=document.getElementById('vdl'),vclose=document.getElementById('vclose');
 const vimg=document.getElementById('vimg'),vbarwrap=document.getElementById('vbarwrap');
 vclose.onclick=()=>{ modal.classList.remove('on'); try{vpreview.pause();}catch(e){} };
-function openImageSaver(blob,name){ if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}
-  lastBlob=blob; lastMime='image/png'; lastExt='png'; lastUrl=URL.createObjectURL(blob);
+function openImageSaver(blob,name,mime,ext){ if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}
+  lastBlob=blob; lastMime=mime||'image/png'; lastExt=ext||'png'; lastUrl=URL.createObjectURL(blob);
   modal.classList.add('on'); vbarwrap.style.display='none'; vpreview.style.display='none';
   vimg.src=lastUrl; vimg.style.display='block';
-  vtitle.textContent='तस्बिर तयार छ! ✅'; vstatus.textContent=platformHint('photo');
-  vsave.style.display='block'; vsave.textContent='📲 Save / Share';
-  vdl.href=lastUrl; vdl.download=name; vdl.textContent='⬇️ डाउनलोड (फोनमा सेभ)'; vdl.style.display='block'; }
+  vtitle.textContent='तस्बिर तयार छ! ('+(blob.size/1048576).toFixed(1)+' MB)';
+  vstatus.textContent=isIOS?'👇 तस्बिर थिचिराख्नुहोस् → "Save to Photos" — वा Share थिच्नुहोस्':'⬇️ तलको बटनबाट डाउनलोड गर्नुहोस्';
+  vsave.style.display='block'; vsave.textContent='📲 Share गरेर सेभ';
+  vdl.href=lastUrl; vdl.download=name; vdl.textContent='⬇️ डाउनलोड / सेभ'; vdl.style.display='block'; }
 
+function getBg(type){ if(bgCache[type]) return bgCache[type]; const oc=document.createElement('canvas'); oc.width=W; oc.height=H9; paintBase(oc.getContext('2d'),W,H9,type); bgCache[type]=oc; return oc; }
 function drawVideoFrame(type,tSec,dur){ ctxRef=vctx; const card=CARDS[type]; vctx.clearRect(0,0,W,H9);
-  const zoom=1+0.04*(tSec/dur); vctx.save(); vctx.translate(W/2,H9*0.46); vctx.scale(zoom,zoom); vctx.translate(-W/2,-H9*0.46); paintBase(vctx,W,H9,type); vctx.restore();
+  const zoom=1+0.04*(tSec/dur); const bg=getBg(type); vctx.save(); vctx.translate(W/2,H9*0.46); vctx.scale(zoom,zoom); vctx.translate(-W/2,-H9*0.46); vctx.drawImage(bg,0,0); vctx.restore();
   if(card.isQuiz){ drawQuizVideo(type,tSec,dur); }
-  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; fitAndRender(vctx,W,H9,0.12,0.15,(s)=>card.build(vctx,state[type],s),{reveal,dy}); }
-  footer(vctx,W,H9); }
+  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; const paper=(type==='jeevan'||type==='prerana'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15; fitAndRender(vctx,W,H9,tf,bf,(s)=>card.build(vctx,state[type],s),{reveal,dy,top:(type==='jeevan')}); }
+  footer(vctx,W,H9,(type==='jeevan'||type==='prerana')); }
 function quizTiming(d){ const qs=(d.questions||[]).slice(0,5); const intro=1.0; const wins=qs.map(q=>0.5+Math.max(2,q.time||5)+1.3); const total=intro+wins.reduce((a,b)=>a+b,0); return {qs,n:qs.length,intro,wins,dur:Math.min(70,total)}; }
 function drawQuizVideo(type,t,dur){ const d=state[type]; const{qs,intro,wins}=quizTiming(d);
   if(t<intro){ const a=clamp(t/0.5,0,1); fitAndRender(vctx,W,H9,0.12,0.15,(s)=>assemble([
@@ -2506,9 +2602,27 @@ function finishVideo(){ vbar.style.width='100%'; lastUrl=URL.createObjectURL(las
   vtitle.textContent='भिडियो तयार छ! ✅'; vstatus.textContent=(lastExt==='mp4'?'MP4':'WebM')+' · '+(lastBlob.size/1048576).toFixed(1)+' MB — '+platformHint('video');
   vpreview.src=lastUrl; vpreview.style.display='block'; vpreview.play().catch(()=>{});
   vdl.href=lastUrl; vdl.download='vidhi-chakra-'+activeType+'.'+lastExt; vdl.textContent='⬇️ डाउनलोड (फोनमा सेभ)'; vdl.style.display='block'; vsave.style.display='block'; }
-vsave.onclick=async()=>{ if(!lastBlob)return; const file=new File([lastBlob],'vidhi-chakra-'+activeType+'.'+lastExt,{type:lastMime});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'विधि चक्र'}); vstatus.textContent='Share बाट "Save Video" छान्नुहोस्।'; }catch(e){ vstatus.textContent='रद्द भयो — तलको लिङ्कबाट डाउनलोड गर्नुहोस्।'; } }
-  else { vdl.click(); vstatus.textContent='डाउनलोड भयो — Files/Photos मा हेर्नुहोस्।'; } };
+vsave.onclick=async()=>{ if(!lastBlob)return;
+  const isImg=(lastExt==='jpg'||lastExt==='png');
+  const file=new File([lastBlob],'vidhi-chakra-'+activeType+'.'+lastExt,{type:lastMime});
+  // Try Share API directly (skip canShare — it's overly restrictive on some iOS versions)
+  if(navigator.share){
+    try{
+      await navigator.share({files:[file],title:'विधि चक्र'});
+      vstatus.textContent='✅ Share भयो — "Save Image"/"Photos" छान्नुहोस् यदि सेभ गरिएको छैन भने।';
+      return;
+    }catch(e){
+      if(e&&e.name==='AbortError'){ vstatus.textContent='रद्द भयो। फेरि Share थिच्नुहोस् वा माथिको तस्बिर लामो थिच्नुहोस्।'; return; }
+      // share threw (not abort) — fall through to data-url download
+    }
+  }
+  // Fallback: data URL download — works on Android; on iOS opens in Safari where user can save
+  try{
+    const reader=new FileReader(); reader.readAsDataURL(lastBlob);
+    reader.onload=()=>{ const dl=document.createElement('a'); dl.href=reader.result; dl.download='vidhi-chakra-'+activeType+'.'+lastExt; document.body.appendChild(dl); dl.click(); document.body.removeChild(dl); };
+    vstatus.textContent=isIOS?'⚠️ Safari मा खोल्नुहोस् र माथिको तस्बिर लामो थिच्नुहोस् → "Save to Photos"।':'⬇️ डाउनलोड सुरु भयो — Gallery/Downloads मा हेर्नुहोस्।';
+  }catch(e){ vstatus.textContent='⚠️ माथिको तस्बिर लामो थिच्नुहोस् → "Save to Photos"।'; }
+};
 
 /* ============================ CONTENT TOOLS ============================ */
 const ioBox=document.getElementById('ioBox'),ioHint=document.getElementById('ioHint');
@@ -2574,7 +2688,8 @@ async function preloadFonts(){ try{ await Promise.all([
   document.fonts.load("400 40px 'EB Garamond'"),
   document.fonts.load("italic 400 40px 'EB Garamond'"),
   document.fonts.load("700 40px 'Philosopher'"),
-  document.fonts.load("800 80px 'Mukta'"), document.fonts.load("700 40px 'Mukta'"), document.fonts.load("600 40px 'Mukta'") ]); }catch(e){} if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } }
+  document.fonts.load("800 80px 'Mukta'"), document.fonts.load("700 40px 'Mukta'"), document.fonts.load("600 40px 'Mukta'"),
+  document.fonts.load("600 48px 'Baloo 2'"), document.fonts.load("400 48px 'Rozha One'"), document.fonts.load("700 48px 'Kalam'"), document.fonts.load("600 48px 'Khand'") ]); }catch(e){} if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } }
 async function init(){ await preloadFonts(); buildPanel(activeType); renderPreview(); setTimeout(()=>{ if(activeType!=='carousel') renderPreview(); else renderCaro(curSlide); },180); }
 if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded',init);
 
