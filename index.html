@@ -2517,11 +2517,9 @@ function buildPanel(k){ panel.innerHTML=''; const d=state[k];
 
 /* ============================ PNG ============================ */
 document.getElementById('btnPng').onclick=()=>{ try{
-  const paper=(activeType==='jeevan'||activeType==='prerana');
-  const mime=paper?'image/jpeg':'image/png', ext=paper?'jpg':'png';
   if(activeType==='carousel'){ renderCaro(curSlide); } else { renderPreview(); }
-  const name='vidhi-chakra-'+activeType+'.'+ext;
-  cv.toBlob(b=>{ if(b) openImageSaver(b,name,mime,ext); else pngError('तस्बिर encode हुन सकेन'); }, mime, paper?0.92:undefined);
+  const name='vidhi-chakra-'+activeType+'.png';
+  cv.toBlob(b=>{ if(b) openImageSaver(b,name,'image/png','png'); else pngError('तस्बिर encode हुन सकेन'); }, 'image/png');
   }catch(e){ pngError((e&&e.message)||String(e)); } };
 function pngError(msg){ modal.classList.add('on'); vbarwrap.style.display='none'; vpreview.style.display='none'; vimg.style.display='none'; vsave.style.display='none'; vdl.style.display='none'; vtitle.textContent='सेभ त्रुटि'; vstatus.textContent='तस्बिर बनाउन सकिएन: '+msg; }
 
