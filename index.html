@@ -2148,7 +2148,11 @@ function paintLokta(c,W,H){
   c.strokeStyle='rgba(120,80,35,0.26)'; c.lineWidth=1.4; c.strokeRect(W*0.05+13,H*0.045+13,W*0.90-26,H*0.91-26);
   const v=c.createRadialGradient(W/2,H/2,W*0.30,W/2,H/2,W*0.85); v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(70,45,10,0.18)'); c.fillStyle=v; c.fillRect(0,0,W,H);
 }
-function paintBase(c,W,H,type){ if(type==='jeevan'){ paintPaper(c,W,H); return; } if(type==='prerana'){ paintLokta(c,W,H); return; } const krishna=(type==='gita');
+function paintFlat(c,W,H){
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FBFAF7'); g.addColorStop(1,'#F1EEE6'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  const v=c.createRadialGradient(W/2,H*0.42,W*0.25,W/2,H*0.5,W*0.78); v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(60,55,45,0.05)'); c.fillStyle=v; c.fillRect(0,0,W,H);
+}
+function paintBase(c,W,H,type){ if(type==='jeevan'){ paintPaper(c,W,H); return; } if(type==='prerana'){ paintLokta(c,W,H); return; } if(type==='bhanai'){ paintFlat(c,W,H); return; } const krishna=(type==='gita');
   const g=c.createLinearGradient(0,0,0,H);
   if(krishna){ g.addColorStop(0,C.krishna0); g.addColorStop(.55,'#16286A'); g.addColorStop(1,C.krishna1); }
   else { g.addColorStop(0,'#070B22'); g.addColorStop(.5,'#121739'); g.addColorStop(1,'#1C2250'); }
@@ -2355,6 +2359,36 @@ CARDS.prerana={ id:'prerana', label:'प्रेरणा', animatable:true,
   parse(t){const d={};const g=re=>{const m=t.match(re);return m?m[1].trim():''};d.title=g(/शीर्षक\s*:(.*)/);const bm=t.match(/विचार\s*:([\s\S]*?)(?:लेखक\s*:|$)/);if(bm)d.body=bm[1].trim();d.author=g(/लेखक\s*:(.*)/)||'विधि चक्र';return d;},
   caption:d=>`${d.title||'प्रेरणा'} 🥀\n\n${d.body||''}\n\n${d.author?'— '+d.author:''}\n\nमन छुने लाग्यो? Comment 👇 यस्तै प्रेरणादायी विचारका लागि Follow र Save गर्नुहोस्।\n\n#प्रेरणा #Motivation #NepaliQuotes #VidhiChakra #जीवन #LifeLessons` };
 
+CARDS.bhanai={ id:'bhanai', label:'भनाइ', animatable:true,
+  sample:()=>({name:'ओशो',statement:'कसैलाई थाहा होस् या नहोस्, सबैको विवेकले यो जान्दछ — तिनीहरू कहाँ सही थिए र कहाँ गलत थिए।',statement2:'',font:'mukta',color:'black',photoImg:null}),
+  build(c,d,s){ const parts=[]; const R=128*s;
+    // photo circle (uploaded) or soft placeholder
+    parts.push([{gap:0,h:R*2+10*s,draw:(cx,y)=>{ const ccy=y+R;
+      c.save(); c.beginPath(); c.arc(cx,ccy,R,0,Math.PI*2); c.closePath();
+      if(d.photoImg){ c.clip(); const img=d.photoImg; const ir=img.width/img.height; let dw,dh;
+        if(ir>1){ dh=R*2; dw=dh*ir; } else { dw=R*2; dh=dw/ir; }
+        c.drawImage(img,cx-dw/2,ccy-dh/2,dw,dh); }
+      else { const g=c.createLinearGradient(cx-R,ccy-R,cx+R,ccy+R); g.addColorStop(0,'#EFE6CE'); g.addColorStop(1,'#D9C896'); c.fillStyle=g; c.fill();
+        c.clip(); fDev(c,R*0.95); c.fillStyle='rgba(120,90,30,0.55)'; c.textAlign='left'; const t='ॐ'; const w=c.measureText(t).width; c.fillText(t,cx-w/2,ccy+R*0.34); }
+      c.restore();
+      c.strokeStyle='rgba(160,120,50,0.55)'; c.lineWidth=4*s; c.beginPath(); c.arc(cx,ccy,R+2*s,0,Math.PI*2); c.stroke(); }}]);
+    // speaker line — fixed style (red, bold) + 🗣️, name from parse
+    fHead(c,46*s,800); const sf=c.font;
+    parts.push([{gap:34*s,h:58*s,draw:(cx,y)=>{ c.font=sf; c.textAlign='left'; const t=(d.name||'')+' भन्नुहन्छ... 🗣️'; const w=c.measureText(t).width; c.fillStyle='#C0392B'; c.fillText(t,cx-w/2,y+44*s); }}]);
+    // main statement — centered, bold, chosen font/color
+    setTextFont(c,52*s,d.font||'mukta'); const st1=wrapLines(c,d.statement||'',W*0.82); const f1=c.font; const lh1=52*s*1.42;
+    parts.push([{gap:54*s,h:st1.length*lh1,draw:(cx,y)=>{ c.font=f1; c.textAlign='left'; c.fillStyle=(TEXTCOLORS[d.color]||TEXTCOLORS.black).c;
+      st1.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+52*s*0.82+j*lh1); }); }}]);
+    if(d.statement2){ setTextFont(c,40*s,d.font||'mukta'); const st2=wrapLines(c,d.statement2,W*0.8); const f2=c.font; const lh2=40*s*1.4;
+      parts.push([{gap:42*s,h:st2.length*lh2,draw:(cx,y)=>{ c.font=f2; c.textAlign='left'; c.fillStyle='rgba(40,35,25,0.78)';
+        st2.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+40*s*0.82+j*lh2); }); }}]); }
+    // praying hands close
+    parts.push([{gap:56*s,h:92*s,draw:(cx,y)=>{ fDev(c,84*s); c.textAlign='left'; const t='🙏'; const w=c.measureText(t).width; c.fillText(t,cx-w/2,y+78*s); }}]);
+    return assemble(parts); },
+  prompt:()=>`तपाईं content creator हुनुहुन्छ। कुनै प्रसिद्ध व्यक्ति/पात्र (जस्तै राम, सीता, कृष्ण, बुद्ध, ओशो) को नाममा एक गहिरो "भनाइ" बनाउनुहोस् नेपालीमा। यो ढाँचामा:\nनाम: <व्यक्ति/पात्रको नाम मात्र, जस्तै "ओशो">\nभनाइ: <मुख्य गहिरो भनाइ, १-३ वाक्य>\nभनाइ२: <वैकल्पिक थप विचार/प्रश्न, १-२ वाक्य — नचाहिए छोड्नुहोस्>`,
+  parse(t){const d={};const g=re=>{const m=t.match(re);return m?m[1].trim():''};d.name=g(/नाम\s*:(.*)/);d.statement2=g(/भनाइ\s*२\s*:(.*)/)||g(/भनाइ2\s*:(.*)/);const bm=t.match(/भनाइ\s*:([\s\S]*?)(?:भनाइ\s*२\s*:|भनाइ2\s*:|$)/);if(bm)d.statement=bm[1].trim();return d;},
+  caption:d=>`${d.name||''} भन्नुहुन्छ... 🗣️\n\n"${d.statement||''}"\n\n${d.statement2?d.statement2+'\n\n':''}यो भनाइ कस्तो लाग्यो? Comment 👇 यस्तै गहिरा भनाइहरूका लागि Follow र Save गर्नुहोस्।\n\n#भनाइ #Quotes #VidhiChakra #SanatanDharma #Nepal #Wisdom` };
+
 CARDS.gita={ id:'gita', label:'गीता', krishna:true, animatable:true,
   sample:()=>({ref:'अध्याय २ · श्लोक ४७',shloka:'कर्मण्येवाधिकारस्ते\nमा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्\nमा ते सङ्गोऽस्त्वकर्मणि॥',meaning:'तिम्रो अधिकार कर्ममा मात्र छ, फलमा कहिल्यै होइन। कर्मको फलको कारण तिमी नबन, कर्म नगर्नेतिर पनि आसक्त नहोऊ।',lesson:'फलको चिन्ता त्यागेर निष्काम कर्म गर — यही गीताको सार हो।'}),
   build(c,d,s){ const parts=[
@@ -2444,14 +2478,14 @@ function drawPill(c,x,y,w,h,fill,stroke){ c.fillStyle=fill; roundRect(c,x,y,w,h,
 const state={}; let activeType='gyan';
 Object.keys(CARDS).forEach(k=>state[k]=CARDS[k].sample());
 function renderTo(c,W,H,type,opt){ ctxRef=c; const card=CARDS[type]; c.clearRect(0,0,W,H); paintBase(c,W,H,type);
-  const paper=(type==='jeevan'||type==='prerana'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15;
+  const paper=(type==='jeevan'||type==='prerana'||type==='bhanai'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15;
   fitAndRender(c,W,H,tf,bf,(s)=>card.build(c,state[type],s),Object.assign({top:(type==='jeevan')},opt||{})); footer(c,W,H,paper); }
 function renderPreview(){ renderTo(ctx,W,H9,activeType,{reveal:1,dy:0}); }
 
 /* ============================ TABS + PANELS ============================ */
 const tabsEl=document.getElementById('tabs');
-const order=['gyan','upaya','prashna','mantra','rashifal','tathya','jeevan','prerana','gita','quiz','carousel'];
-const LABELS={gyan:'ज्ञान',upaya:'उपाय',prashna:'प्रश्न',mantra:'मन्त्र',rashifal:'राशिफल',tathya:'तथ्य',jeevan:'जीवन',prerana:'प्रेरणा',gita:'गीता',quiz:'क्विज',carousel:'क्यारौसेल'};
+const order=['gyan','upaya','prashna','mantra','rashifal','tathya','jeevan','prerana','bhanai','gita','quiz','carousel'];
+const LABELS={gyan:'ज्ञान',upaya:'उपाय',prashna:'प्रश्न',mantra:'मन्त्र',rashifal:'राशिफल',tathya:'तथ्य',jeevan:'जीवन',prerana:'प्रेरणा',bhanai:'भनाइ',gita:'गीता',quiz:'क्विज',carousel:'क्यारौसेल'};
 order.forEach(k=>{ const t=document.createElement('div'); t.className='tab'+(k===activeType?' on':''); t.textContent=LABELS[k]; t.dataset.k=k; t.onclick=()=>selectTab(k); tabsEl.appendChild(t); });
 function selectTab(k){ activeType=k; [...tabsEl.children].forEach(t=>t.classList.toggle('on',t.dataset.k===k));
   const iob=document.getElementById('ioBox'); if(iob) iob.value='';
@@ -2500,6 +2534,18 @@ function colorSelect(d,re,withMulti){ const w=document.createElement('div'); w.c
   if(withMulti){ const o=document.createElement('option'); o.value='multi'; o.textContent='रंगीन · Multi'; o.style.color='#111'; if((d.color||'multi')==='multi')o.selected=true; sel.appendChild(o); }
   Object.keys(TEXTCOLORS).forEach(key=>{ const o=document.createElement('option'); o.value=key; o.textContent=TEXTCOLORS[key].n; o.style.color='#111'; if(d.color===key)o.selected=true; sel.appendChild(o); });
   sel.onchange=()=>{ d.color=sel.value; re(); }; w.appendChild(sel); return w; }
+function photoUpload(d,re){ const w=document.createElement('div'); w.className='field';
+  const l=document.createElement('label'); l.textContent='तस्बिर · Photo'; w.appendChild(l);
+  const row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;align-items:center;';
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.style.cssText='flex:1;font-size:13px;color:#F0E6D2;';
+  inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f)return; const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image(); img.onload=()=>{ d.photoImg=img; re(); }; img.src=reader.result; };
+    reader.readAsDataURL(f); };
+  row.appendChild(inp);
+  if(d.photoImg){ const rm=document.createElement('button'); rm.type='button'; rm.textContent='✕'; rm.title='हटाउनुहोस्';
+    rm.style.cssText='background:rgba(255,80,80,.15);border:1px solid rgba(255,80,80,.4);color:#F0E6D2;border-radius:8px;padding:8px 12px;cursor:pointer;';
+    rm.onclick=()=>{ d.photoImg=null; re(); }; row.appendChild(rm); }
+  w.appendChild(row); return w; }
 function buildPanel(k){ panel.innerHTML=''; const d=state[k];
   const title=document.createElement('div'); title.className='sec-title'; title.textContent=LABELS[k]+' · सम्पादन'; panel.appendChild(title);
   const re=()=>renderPreview();
@@ -2511,6 +2557,7 @@ function buildPanel(k){ panel.innerHTML=''; const d=state[k];
   else if(k==='tathya'){ panel.appendChild(fld('अंक/संख्या',d.number,v=>{d.number=v;re();})); panel.appendChild(fld('शीर्षक',d.heading,v=>{d.heading=v;re();})); panel.appendChild(fld('तथ्य',d.fact,v=>{d.fact=v;re();},4)); }
   else if(k==='jeevan'){ panel.appendChild(fld('शीर्षक',d.title,v=>{d.title=v;re();})); panel.appendChild(fontSelect(d,re)); panel.appendChild(colorSelect(d,re,true)); panel.appendChild(listEditor('वाक्यहरू / सत्यहरू',d.lines,re,6)); panel.appendChild(fld('निष्कर्ष (सार)',d.closing,v=>{d.closing=v;re();},2)); }
   else if(k==='prerana'){ panel.appendChild(fld('शीर्षक',d.title,v=>{d.title=v;re();})); panel.appendChild(fontSelect(d,re)); panel.appendChild(colorSelect(d,re,false)); panel.appendChild(fld('विचार (अनुच्छेद)',d.body,v=>{d.body=v;re();},6)); panel.appendChild(fld('लेखक/स्रोत',d.author,v=>{d.author=v;re();})); }
+  else if(k==='bhanai'){ panel.appendChild(photoUpload(d,re)); panel.appendChild(fld('नाम (व्यक्ति/पात्र)',d.name,v=>{d.name=v;re();})); panel.appendChild(fontSelect(d,re)); panel.appendChild(colorSelect(d,re,false)); panel.appendChild(fld('मुख्य भनाइ',d.statement,v=>{d.statement=v;re();},4)); panel.appendChild(fld('थप विचार (वैकल्पिक)',d.statement2,v=>{d.statement2=v;re();},2)); }
   else if(k==='gita'){ panel.appendChild(fld('सन्दर्भ',d.ref,v=>{d.ref=v;re();})); panel.appendChild(fld('श्लोक',d.shloka,v=>{d.shloka=v;re();},4)); panel.appendChild(fld('अर्थ',d.meaning,v=>{d.meaning=v;re();},3)); panel.appendChild(fld('शिक्षा',d.lesson,v=>{d.lesson=v;re();},2)); }
   else if(k==='quiz'){ panel.appendChild(quizEditor(d,re)); }
 }
@@ -2542,8 +2589,8 @@ function getBg(type){ if(bgCache[type]) return bgCache[type]; const oc=document.
 function drawVideoFrame(type,tSec,dur){ ctxRef=vctx; const card=CARDS[type]; vctx.clearRect(0,0,W,H9);
   const zoom=1+0.04*(tSec/dur); const bg=getBg(type); vctx.save(); vctx.translate(W/2,H9*0.46); vctx.scale(zoom,zoom); vctx.translate(-W/2,-H9*0.46); vctx.drawImage(bg,0,0); vctx.restore();
   if(card.isQuiz){ drawQuizVideo(type,tSec,dur); }
-  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; const paper=(type==='jeevan'||type==='prerana'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15; fitAndRender(vctx,W,H9,tf,bf,(s)=>card.build(vctx,state[type],s),{reveal,dy,top:(type==='jeevan')}); }
-  footer(vctx,W,H9,(type==='jeevan'||type==='prerana')); }
+  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; const paper=(type==='jeevan'||type==='prerana'||type==='bhanai'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15; fitAndRender(vctx,W,H9,tf,bf,(s)=>card.build(vctx,state[type],s),{reveal,dy,top:(type==='jeevan')}); }
+  footer(vctx,W,H9,(type==='jeevan'||type==='prerana'||type==='bhanai')); }
 function quizTiming(d){ const qs=(d.questions||[]).slice(0,5); const intro=1.0; const wins=qs.map(q=>0.5+Math.max(2,q.time||5)+1.3); const total=intro+wins.reduce((a,b)=>a+b,0); return {qs,n:qs.length,intro,wins,dur:Math.min(70,total)}; }
 function drawQuizVideo(type,t,dur){ const d=state[type]; const{qs,intro,wins}=quizTiming(d);
   if(t<intro){ const a=clamp(t/0.5,0,1); fitAndRender(vctx,W,H9,0.12,0.15,(s)=>assemble([
@@ -2627,10 +2674,16 @@ const ioBox=document.getElementById('ioBox'),ioHint=document.getElementById('ioH
 function copy(text,msg){ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(()=>flash(msg)).catch(()=>fbCopy(text,msg)); } else fbCopy(text,msg); }
 function fbCopy(text,msg){ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;top:-1000px;opacity:0;'; document.body.appendChild(ta); ta.focus(); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); flash(msg); }
 function flash(m){ ioHint.textContent=m; setTimeout(()=>ioHint.textContent='सुझाव: AI को जवाफ बाकसमा टाँसेर Smart Paste थिच्नुहोस्।',2600); }
-document.getElementById('btnPrompt').onclick=()=>{ if(activeType==='carousel')return; copy(CARDS[activeType].prompt(state[activeType]),'✅ AI Prompt कपी भयो — ChatGPT/Gemini मा टाँस्नुहोस्।'); };
-function doSmartParse(){ if(activeType==='carousel'){flash('क्यारौसेलमा Smart Paste छैन।');return;}
+document.getElementById('btnPrompt').onclick=()=>{ if(activeType==='carousel'){ copy(caroPrompt(),'✅ AI Prompt कपी भयो — ChatGPT/Gemini मा टाँस्नुहोस्।'); return; } copy(CARDS[activeType].prompt(state[activeType]),'✅ AI Prompt कपी भयो — ChatGPT/Gemini मा टाँस्नुहोस्।'); };
+function doSmartParse(){
   const txt=ioBox.value.trim(); if(!txt){flash('पहिले AI को जवाफ बाकसमा टाँस्नुहोस्।');return;}
   try{ const clean=txt.replace(/\*\*/g,'').replace(/__/g,'').replace(/^\s*#+\s*/gm,'').replace(/^\s*[-•]\s+/gm,'');
+    if(activeType==='carousel'){ const parsed=caroParse(clean);
+      const got=(parsed.hook&&parsed.hook.trim())||(parsed.slides&&parsed.slides.length);
+      if(got){ if(parsed.hook)caroState.hook=parsed.hook; if(parsed.slides&&parsed.slides.length)caroState.slides=parsed.slides.slice(0,8);
+        buildCaroPanel(); renderCaro(0); flash('✅ क्यारौसेल भरियो!'); }
+      else { flash('ढाँचा नमिल्यो — "AI Prompt कपी" को ढाँचामा जवाफ छ कि जाँच्नुहोस्।'); }
+      return; }
     const parsed=CARDS[activeType].parse(clean);
     const got=Object.keys(parsed).some(k=>{const v=parsed[k]; return Array.isArray(v)?v.length:(v&&String(v).trim());});
     if(got){ state[activeType]=Object.assign(state[activeType],parsed); buildPanel(activeType); renderPreview(); flash('✅ फिल्डहरू भरियो!'); }
@@ -2639,14 +2692,18 @@ function doSmartParse(){ if(activeType==='carousel'){flash('क्यारौ�
 document.getElementById('btnParse').onclick=doSmartParse;
 document.getElementById('btnPaste').onclick=doSmartParse;
 // auto-parse shortly after a paste, so it "just works"
-ioBox.addEventListener('paste',()=>{ setTimeout(()=>{ if(ioBox.value.trim().length>12 && activeType!=='carousel') doSmartParse(); },120); });
-document.getElementById('btnCap').onclick=()=>{ if(activeType==='carousel')return; copy(CARDS[activeType].caption(state[activeType]),'✅ Caption कपी भयो — Facebook मा टाँस्नुहोस्।'); };
+ioBox.addEventListener('paste',()=>{ setTimeout(()=>{ if(ioBox.value.trim().length>12) doSmartParse(); },120); });
+document.getElementById('btnCap').onclick=()=>{ if(activeType==='carousel'){ copy(caroCaption(),'✅ Caption कपी भयो — Facebook मा टाँस्नुहोस्।'); return; } copy(CARDS[activeType].caption(state[activeType]),'✅ Caption कपी भयो — Facebook मा टाँस्नुहोस्।'); };
 document.getElementById('btnReel').onclick=()=>{ if(activeType==='carousel')return; const d=state[activeType];
   const topic=d.heading||d.question||d.sign||d.problem||d.ref||LABELS[activeType];
   copy(`तपाईं नेपाली भाइरल reel स्क्रिप्ट लेखक हुनुहुन्छ। "${topic}" विषयमा ३० सेकेन्डको बोल्ने स्क्रिप्ट नेपालीमा लेख्नुहोस्:\n\n१. HOOK (पहिलो ३ सेकेन्ड):\n२. BODY (मुख्य कुरा):\n३. CTA (Follow/Comment/Save):\n४. ON-SCREEN TEXT:\n५. ३ वैकल्पिक HOOK:\n\nजोशिलो, आत्मीय स्वरमा।`,'✅ Reel Script prompt कपी भयो — AI मा टाँस्नुहोस्।'); };
 
 /* ============================ CAROUSEL (1:1) ============================ */
 const caroState={hook:'घरमा सुख-शान्ति ल्याउने ५ वैदिक उपाय',slides:['मुख्य ढोकामा स्वस्तिक र शुभ-लाभ लेख्नुहोस्।','बिहान शंख वा घण्टी बजाउनुहोस् — नकारात्मक ऊर्जा हट्छ।','तुलसीको बिरुवा घरको आँगनमा राख्नुहोस्।','साँझ घरमा घिउको दीप बाल्नुहोस्।','शुक्रबार लक्ष्मीको पूजा गर्नुहोस्।']};
+function caroPrompt(){ return `तपाईं नेपाली ज्योतिषी/content creator हुनुहुन्छ। फेसबुक/इन्स्टाग्रामका लागि "क्यारौसेल" (slide post) बनाउनुहोस्, यो ढाँचामा:\nHook: <आकर्षक पहिलो वाक्य — जस्तै "घरमा सुख-शान्ति ल्याउने ५ उपाय">\nबुँदा: <slide १ को जानकारी, १-२ वाक्य>\nबुँदा: <slide २>\nबुँदा: <slide ३>\nबुँदा: <slide ४>\nबुँदा: <slide ५ — ३ देखि ८ सम्म राख्न सक्नुहुन्छ>`; }
+function caroParse(t){ const d={slides:[]}; t.split('\n').forEach(l=>{ const[k,...r]=l.split(':'); const v=r.join(':').trim(); if(!v)return;
+  if(/hook/i.test(k))d.hook=v; else if(/बुँदा|बुदा|point|slide/i.test(k))d.slides.push(v); }); return d; }
+function caroCaption(){ return `${caroState.hook} 🪔\n\n${caroState.slides.map((p,i)=>(DEV[i]||i+1)+'. '+p).join('\n')}\n\nस्वाइप गरेर हेर्नुहोस् ➡️ कुन बुँदा सबैभन्दा उपयोगी लाग्यो? Comment 👇 Follow र Save गर्न नबिर्सनुहोस्।\n\n#विधिचक्र #VidhiChakra #SanatanDharma #Nepal #VedicWisdom`; }
 const frameWrap=document.getElementById('frameWrap'); let curSlide=0;
 function showCarousel(on){ if(on){ frameWrap.className='frame r11'; cv.height=H1; panel.innerHTML=''; document.getElementById('btnVid').style.display='none'; buildCaroPanel(); renderCaro(0); panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   else { frameWrap.className='frame r916'; cv.height=H9; document.getElementById('btnVid').style.display=''; } }
