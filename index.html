@@ -2183,7 +2183,7 @@ function chakra(c,cx,cy,R,glow){
   c.restore();
 }
 function diamond(c,cx,cy,sz){ c.save(); c.translate(cx,cy); c.rotate(Math.PI/4); c.fillStyle=C.gold; c.fillRect(-sz/2,-sz/2,sz,sz); c.restore(); }
-function footer(c,W,H,paper){ fLab(c,27); centerOne(c,'विधि चक्र    ·    @vidhichakra', W/2, H-66, paper?'rgba(120,80,25,0.6)':'rgba(240,207,107,0.62)'); }
+function footer(c,W,H,paper){ fLab(c,27); centerOne(c,'विधि चक्र    ·    @vidhichakra', W/2, H-128, paper?'rgba(120,80,25,0.6)':'rgba(240,207,107,0.62)'); }
 
 /* header: chakra crown + gold label flanked by rules (no letter-spacing) */
 function headBlocks(c,label,s,R){
@@ -2361,7 +2361,7 @@ CARDS.prerana={ id:'prerana', label:'प्रेरणा', animatable:true,
 
 CARDS.bhanai={ id:'bhanai', label:'भनाइ', animatable:true,
   sample:()=>({name:'ओशो',statement:'कसैलाई थाहा होस् या नहोस्, सबैको विवेकले यो जान्दछ — तिनीहरू कहाँ सही थिए र कहाँ गलत थिए।',statement2:'',font:'mukta',color:'black',photoImg:null}),
-  build(c,d,s){ const parts=[]; const R=128*s;
+  build(c,d,s){ const parts=[]; const R=168*s;
     // photo circle (uploaded) or soft placeholder
     parts.push([{gap:0,h:R*2+10*s,draw:(cx,y)=>{ const ccy=y+R;
       c.save(); c.beginPath(); c.arc(cx,ccy,R,0,Math.PI*2); c.closePath();
@@ -2373,17 +2373,17 @@ CARDS.bhanai={ id:'bhanai', label:'भनाइ', animatable:true,
       c.restore();
       c.strokeStyle='rgba(160,120,50,0.55)'; c.lineWidth=4*s; c.beginPath(); c.arc(cx,ccy,R+2*s,0,Math.PI*2); c.stroke(); }}]);
     // speaker line — fixed style (red, bold) + 🗣️, name from parse
-    fHead(c,46*s,800); const sf=c.font;
-    parts.push([{gap:34*s,h:58*s,draw:(cx,y)=>{ c.font=sf; c.textAlign='left'; const t=(d.name||'')+' भन्नुहन्छ... 🗣️'; const w=c.measureText(t).width; c.fillStyle='#C0392B'; c.fillText(t,cx-w/2,y+44*s); }}]);
+    fHead(c,50*s,800); const sf=c.font;
+    parts.push([{gap:26*s,h:62*s,draw:(cx,y)=>{ c.font=sf; c.textAlign='left'; const t=(d.name||'')+' भन्नुहन्छ... 🗣️'; const w=c.measureText(t).width; c.fillStyle='#C0392B'; c.fillText(t,cx-w/2,y+44*s); }}]);
     // main statement — centered, bold, chosen font/color
-    setTextFont(c,52*s,d.font||'mukta'); const st1=wrapLines(c,d.statement||'',W*0.82); const f1=c.font; const lh1=52*s*1.42;
-    parts.push([{gap:54*s,h:st1.length*lh1,draw:(cx,y)=>{ c.font=f1; c.textAlign='left'; c.fillStyle=(TEXTCOLORS[d.color]||TEXTCOLORS.black).c;
-      st1.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+52*s*0.82+j*lh1); }); }}]);
-    if(d.statement2){ setTextFont(c,40*s,d.font||'mukta'); const st2=wrapLines(c,d.statement2,W*0.8); const f2=c.font; const lh2=40*s*1.4;
+    setTextFont(c,58*s,d.font||'mukta'); const st1=wrapLines(c,d.statement||'',W*0.84); const f1=c.font; const lh1=58*s*1.42;
+    parts.push([{gap:48*s,h:st1.length*lh1,draw:(cx,y)=>{ c.font=f1; c.textAlign='left'; c.fillStyle=(TEXTCOLORS[d.color]||TEXTCOLORS.black).c;
+      st1.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+58*s*0.82+j*lh1); }); }}]);
+    if(d.statement2){ setTextFont(c,44*s,d.font||'mukta'); const st2=wrapLines(c,d.statement2,W*0.8); const f2=c.font; const lh2=44*s*1.4;
       parts.push([{gap:42*s,h:st2.length*lh2,draw:(cx,y)=>{ c.font=f2; c.textAlign='left'; c.fillStyle='rgba(40,35,25,0.78)';
-        st2.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+40*s*0.82+j*lh2); }); }}]); }
+        st2.forEach((l,j)=>{ const w=c.measureText(l).width; c.fillText(l,cx-w/2,y+44*s*0.82+j*lh2); }); }}]); }
     // praying hands close
-    parts.push([{gap:56*s,h:92*s,draw:(cx,y)=>{ fDev(c,84*s); c.textAlign='left'; const t='🙏'; const w=c.measureText(t).width; c.fillText(t,cx-w/2,y+78*s); }}]);
+    parts.push([{gap:62*s,h:108*s,draw:(cx,y)=>{ fDev(c,102*s); c.textAlign='left'; const t='🙏'; const w=c.measureText(t).width; c.fillText(t,cx-w/2,y+92*s); }}]);
     return assemble(parts); },
   prompt:()=>`तपाईं content creator हुनुहुन्छ। कुनै प्रसिद्ध व्यक्ति/पात्र (जस्तै राम, सीता, कृष्ण, बुद्ध, ओशो) को नाममा एक गहिरो "भनाइ" बनाउनुहोस् नेपालीमा। यो ढाँचामा:\nनाम: <व्यक्ति/पात्रको नाम मात्र, जस्तै "ओशो">\nभनाइ: <मुख्य गहिरो भनाइ, १-३ वाक्य>\nभनाइ२: <वैकल्पिक थप विचार/प्रश्न, १-२ वाक्य — नचाहिए छोड्नुहोस्>`,
   parse(t){const d={};const g=re=>{const m=t.match(re);return m?m[1].trim():''};d.name=g(/नाम\s*:(.*)/);d.statement2=g(/भनाइ\s*२\s*:(.*)/)||g(/भनाइ2\s*:(.*)/);const bm=t.match(/भनाइ\s*:([\s\S]*?)(?:भनाइ\s*२\s*:|भनाइ2\s*:|$)/);if(bm)d.statement=bm[1].trim();return d;},
@@ -2478,7 +2478,7 @@ function drawPill(c,x,y,w,h,fill,stroke){ c.fillStyle=fill; roundRect(c,x,y,w,h,
 const state={}; let activeType='gyan';
 Object.keys(CARDS).forEach(k=>state[k]=CARDS[k].sample());
 function renderTo(c,W,H,type,opt){ ctxRef=c; const card=CARDS[type]; c.clearRect(0,0,W,H); paintBase(c,W,H,type);
-  const paper=(type==='jeevan'||type==='prerana'||type==='bhanai'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15;
+  const paper=(type==='jeevan'||type==='prerana'||type==='bhanai'); let tf=paper?0.085:0.12, bf=paper?0.10:0.15; if(type==='bhanai'){tf=0.05;bf=0.075;}
   fitAndRender(c,W,H,tf,bf,(s)=>card.build(c,state[type],s),Object.assign({top:(type==='jeevan')},opt||{})); footer(c,W,H,paper); }
 function renderPreview(){ renderTo(ctx,W,H9,activeType,{reveal:1,dy:0}); }
 
@@ -2589,7 +2589,7 @@ function getBg(type){ if(bgCache[type]) return bgCache[type]; const oc=document.
 function drawVideoFrame(type,tSec,dur){ ctxRef=vctx; const card=CARDS[type]; vctx.clearRect(0,0,W,H9);
   const zoom=1+0.04*(tSec/dur); const bg=getBg(type); vctx.save(); vctx.translate(W/2,H9*0.46); vctx.scale(zoom,zoom); vctx.translate(-W/2,-H9*0.46); vctx.drawImage(bg,0,0); vctx.restore();
   if(card.isQuiz){ drawQuizVideo(type,tSec,dur); }
-  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; const paper=(type==='jeevan'||type==='prerana'||type==='bhanai'); const tf=paper?0.085:0.12, bf=paper?0.10:0.15; fitAndRender(vctx,W,H9,tf,bf,(s)=>card.build(vctx,state[type],s),{reveal,dy,top:(type==='jeevan')}); }
+  else { const reveal=clamp((tSec-0.1)/0.5,0,1); const dy=(1-reveal)*36; const paper=(type==='jeevan'||type==='prerana'||type==='bhanai'); let tf=paper?0.085:0.12, bf=paper?0.10:0.15; if(type==='bhanai'){tf=0.05;bf=0.075;} fitAndRender(vctx,W,H9,tf,bf,(s)=>card.build(vctx,state[type],s),{reveal,dy,top:(type==='jeevan')}); }
   footer(vctx,W,H9,(type==='jeevan'||type==='prerana'||type==='bhanai')); }
 function quizTiming(d){ const qs=(d.questions||[]).slice(0,5); const intro=1.0; const wins=qs.map(q=>0.5+Math.max(2,q.time||5)+1.3); const total=intro+wins.reduce((a,b)=>a+b,0); return {qs,n:qs.length,intro,wins,dur:Math.min(70,total)}; }
 function drawQuizVideo(type,t,dur){ const d=state[type]; const{qs,intro,wins}=quizTiming(d);
