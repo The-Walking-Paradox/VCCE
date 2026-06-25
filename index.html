@@ -2222,15 +2222,69 @@ function ruleBlock(s,gap){ return {gap:gap||0,h:14*s,draw:(cx,y)=>diamond(ctxRef
 let ctxRef=ctx; // diamond uses active ctx; set before render
 
 /* numbered list block (points/steps) */
-function listBlocks(c,items,s,size,gapBefore){
+// Tolerant parser for heading/numbered-points/source content — handles बुँदा: labels,
+// numbered lists (१. / 1. / (1) / 1)), or even plain unlabeled lines, since AI replies vary.
+function parseHeadingPointsSource(t){
+  const d={points:[]};
+  const HEAD_RE=/^(?:शीर्षक|title|heading)\s*[:：]\s*(.*)$/i;
+  const SRC_RE=/^(?:स्रोत|source)\s*[:：]\s*(.*)$/i;
+  const PT_RE=/^(?:बुँदा|बुदा|point|step|चरण)\s*[:：]\s*(.*)$/i;
+  const NUM_RE=/^[\(\[]?\s*(?:[०-९]+|[0-9]+)\s*[.\)।:]\s*(.*)$/;
+  String(t||'').split('\n').forEach(raw=>{
+    const l=raw.trim(); if(!l) return; let m;
+    if(m=l.match(HEAD_RE)){ d.heading=m[1].trim(); return; }
+    if(m=l.match(SRC_RE)){ d.source=m[1].trim(); return; }
+    if(m=l.match(PT_RE)){ if(m[1].trim()) d.points.push(m[1].trim()); return; }
+    if(m=l.match(NUM_RE)){ if(m[1].trim()) d.points.push(m[1].trim()); return; }
+    d.points.push(l); // fallback: any other non-empty line is treated as a point too
+  });
+  return d;
+}
+function parseProblemStepsNote(t){
+  const d={steps:[]};
+  const PROB_RE=/^(?:समस्या|problem)\s*[:：]\s*(.*)$/i;
+  const NOTE_RE=/^(?:नोट|note)\s*[:：]\s*(.*)$/i;
+  const STEP_RE=/^(?:उपाय|step|चरण)\s*[:：]\s*(.*)$/i;
+  const NUM_RE2=/^[\(\[]?\s*(?:[०-९]+|[0-9]+)\s*[.\)।:]\s*(.*)$/;
+  String(t||'').split('\n').forEach(raw=>{
+    const l=raw.trim(); if(!l) return; let m;
+    if(m=l.match(PROB_RE)){ d.problem=m[1].trim(); return; }
+    if(m=l.match(NOTE_RE)){ d.note=m[1].trim(); return; }
+    if(m=l.match(STEP_RE)){ if(m[1].trim()) d.steps.push(m[1].trim()); return; }
+    if(m=l.match(NUM_RE2)){ if(m[1].trim()) d.steps.push(m[1].trim()); return; }
+    d.steps.push(l);
+  });
+  return d;
+}
+function listBlocks(c,items,s,size,gapBefore,chipColor){
   const colW=W*0.74, colL=(W-colW)/2; const out=[]; const lh=size*s*1.3;
+  const accent=chipColor||C.goldHi;
+  const HEADER_BODY_MIN=65; // only pull out a highlighted sub-header when the point is long enough to actually need one
   (items||[]).slice(0,5).forEach((p,i)=>{
-    fDev(c,size*s); const lines=wrapLines(c,p,colW-72*s); const font=c.font;
-    out.push({gap:i===0?gapBefore:30*s,h:lines.length*lh,draw:(cx,y)=>{
-      c.font=font; c.textAlign='left';
-      c.fillStyle=C.goldHi; c.fillText(DEV[i]||(i+1), colL-58*s, y+size*s*0.82);
-      c.fillStyle=C.ink; lines.forEach((ln,j)=>c.fillText(ln, colL, y+size*s*0.82+j*lh));
-    }});
+    const m=String(p||'').match(/^([^:：]{2,40})[:：]\s*(.+)$/s);
+    const useHeader=m && m[2].trim().length>=HEADER_BODY_MIN;
+    if(useHeader){
+      const label=m[1].trim(), body=m[2].trim();
+      fHead(c,size*0.84*s,800); const hf=c.font; const hw=c.measureText(label).width;
+      const chipPadX=18*s, chipH=size*s*0.92;
+      fDev(c,size*s); const lines=wrapLines(c,body,colW-72*s); const bfont=c.font;
+      const headRowH=chipH+18*s;
+      out.push({gap:i===0?gapBefore:34*s,h:headRowH+lines.length*lh,draw:(cx,y)=>{
+        c.textAlign='left';
+        fHead(c,size*0.9*s,800); c.fillStyle=accent; c.fillText(DEV[i]||(i+1), colL-58*s, y+chipH*0.74);
+        c.font=hf; roundRect(c,colL,y,hw+chipPadX*2,chipH,chipH*0.34); c.fillStyle=accent; c.fill();
+        c.fillStyle=C.base0; c.fillText(label, colL+chipPadX, y+chipH*0.7);
+        c.font=bfont; c.fillStyle=C.ink;
+        lines.forEach((ln,j)=>c.fillText(ln, colL, y+headRowH+size*s*0.82+j*lh));
+      }});
+    } else {
+      fDev(c,size*s); const lines=wrapLines(c,p,colW-72*s); const font=c.font;
+      out.push({gap:i===0?gapBefore:30*s,h:lines.length*lh,draw:(cx,y)=>{
+        c.font=font; c.textAlign='left';
+        c.fillStyle=accent; c.fillText(DEV[i]||(i+1), colL-58*s, y+size*s*0.82);
+        c.fillStyle=C.ink; lines.forEach((ln,j)=>c.fillText(ln, colL, y+size*s*0.82+j*lh));
+      }});
+    }
   });
   return out;
 }
@@ -2253,22 +2307,22 @@ function assemble(parts){ const blocks=[].concat.apply([],parts); let total=0; b
 const CARDS={};
 
 CARDS.gyan={ id:'gyan', label:'ज्ञान', animatable:true,
-  sample:()=>({heading:'घरमा किन तुलसी राख्ने?',points:['तुलसीले घरको वायु शुद्ध गरी सकारात्मक ऊर्जा ल्याउँछ।','बिहान तुलसीलाई जल चढाउँदा मन शान्त रहन्छ।','तुलसीको पातले रोगप्रतिरोधक क्षमता बढाउँछ।','साँझमा तुलसीनेर दीप बाल्नु शुभ मानिन्छ।'],source:'स्रोत: स्कन्द पुराण'}),
+  sample:()=>({heading:"नमस्कार त सधैँ गर्नुहुन्छ, तर के यसको यो 'चमत्कारी' रहस्य थाहा छ?",points:['एक्युप्रेसर र एकाग्रता: दुवै हात जोड्दा औंलाका टुप्पाहरूमा दबाब पर्छ, जसले सिधै आँखा, कान र मस्तिष्कका एक्युप्रेसर विन्दुहरूलाई सक्रिय बनाई एकाग्रता र स्मरणशक्ति बढाउँछ।','बायो-इलेक्ट्रिक उर्जा: हाम्रा हातहरू उर्जाका संवाहक हुन्; नमस्कार गर्दा दुवै हत्केला आपसमा जोडिँदा शरीरमा बायो-इलेक्ट्रिक उर्जाको एउटा पूर्ण चक्र बनेर सकारात्मक उर्जा प्रवाह हुन्छ।','तुलसीले घरको वायु शुद्ध गरी सकारात्मक ऊर्जा ल्याउँछ।','साँझमा तुलसीनेर दीप बाल्नु शुभ मानिन्छ।'],source:'योग शास्त्र / शास्त्र प्रकाश',highlightColor:'gold'}),
   build(c,d,s){ return assemble([ headBlocks(c,'ज्ञान',s),
     [heroBlock(c,d.heading,s,82,44,0.84,C.hero,true)],
-    [ruleBlock(s,34*s)], listBlocks(c,d.points,s,42,30*s),
+    [ruleBlock(s,34*s)], listBlocks(c,d.points,s,42,30*s,(CHIPCOLORS[d.highlightColor]||CHIPCOLORS.gold).c),
     d.source?[bodyBlock(c,d.source,s,30,44*s,C.muted,0.8)]:[] ]); },
-  prompt:()=>`तपाईं नेपाली ज्योतिषी हुनुहुन्छ। फेसबुकका लागि "ज्ञान" कार्ड बनाउनुहोस्, नेपालीमा यो ढाँचामा:\nशीर्षक: <छोटो आकर्षक शीर्षक>\nबुँदा: <बुँदा १>\nबुँदा: <बुँदा २>\nबुँदा: <बुँदा ३>\nबुँदा: <बुँदा ४>\nस्रोत: <ग्रन्थ/स्रोत>\nबुँदा छोटो (१-२ वाक्य) राख्नुहोस्।`,
-  parse(t){const d={points:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/शीर्षक/.test(k))d.heading=v;else if(/बुँदा|बुदा|point/i.test(k))d.points.push(v);else if(/स्रोत|source/i.test(k))d.source=v;});return d;},
+  prompt:()=>`तपाईं नेपाली ज्योतिषी हुनुहुन्छ। फेसबुकका लागि "ज्ञान" कार्ड बनाउनुहोस्, नेपालीमा यो ढाँचामा:\nशीर्षक: <छोटो आकर्षक शीर्षक>\nबुँदा: <बुँदा १>\nबुँदा: <बुँदा २>\nबुँदा: <बुँदा ३>\nबुँदा: <बुँदा ४>\nस्रोत: <ग्रन्थ/स्रोत>\nयदि कुनै बुँदा लामो/व्याख्यात्मक (२+ वाक्य) हुन्छ भने त्यसलाई "छोटो उप-शीर्षक: व्याख्या" ढाँचामा लेख्नुहोस् (जस्तै "बायो-इलेक्ट्रिक उर्जा: हाम्रा हातहरू उर्जाका संवाहक हुन्...")। छोटो बुँदा (१ वाक्य) लाई सामान्य वाक्यमा नै राख्नुहोस्, जबरजस्ती उप-शीर्षक नथप्नुहोस्।`,
+  parse(t){ return parseHeadingPointsSource(t); },
   caption:d=>`${d.heading||'आजको ज्ञान'} 🙏\n\n${(d.points||[]).map((p,i)=>(DEV[i]||i+1)+'. '+p).join('\n')}\n\n${d.source||''}\n\nयस्ता आध्यात्मिक ज्ञान दैनिक पाउन Follow गर्नुहोस् 🪔 कुन बुँदा मन पर्‍यो? Comment गर्नुहोस्, Save गर्न नबिर्सनुहोस्।\n\n#सनातनधर्म #ज्योतिष #VidhiChakra #SanatanDharma #Nepal #VedicWisdom` };
 
 CARDS.upaya={ id:'upaya', label:'उपाय', animatable:true,
-  sample:()=>({problem:'घरमा अशान्ति र आर्थिक बाधा?',steps:['प्रत्येक शुक्रबार बिहान घरको मूल ढोका सफा गर्नुहोस्।','लक्ष्मीको अगाडि घिउको दीप बाल्नुहोस्।','"ॐ श्रीं ह्रीं श्रीं" मन्त्र १०८ पटक जप गर्नुहोस्।'],note:'श्रद्धा र नियमितताले मात्र उपाय फलदायी हुन्छ।'}),
+  sample:()=>({problem:'घरमा अशान्ति र आर्थिक बाधा?',steps:['प्रत्येक शुक्रबार बिहान घरको मूल ढोका सफा गर्नुहोस्।','लक्ष्मीको अगाडि घिउको दीप बाल्नुहोस्।','"ॐ श्रीं ह्रीं श्रीं" मन्त्र १०८ पटक जप गर्नुहोस्।'],note:'श्रद्धा र नियमितताले मात्र उपाय फलदायी हुन्छ।',highlightColor:'gold'}),
   build(c,d,s){ return assemble([ headBlocks(c,'उपाय',s),
-    [heroBlock(c,d.problem,s,70,42,0.84,C.hero,true)], [ruleBlock(s,32*s)], listBlocks(c,d.steps,s,40,30*s),
+    [heroBlock(c,d.problem,s,70,42,0.84,C.hero,true)], [ruleBlock(s,32*s)], listBlocks(c,d.steps,s,40,30*s,(CHIPCOLORS[d.highlightColor]||CHIPCOLORS.gold).c),
     d.note?[bodyBlock(c,d.note,s,32,42*s,C.muted,0.8)]:[] ]); },
-  prompt:()=>`नेपाली ज्योतिषी भएर "उपाय" कार्ड बनाउनुहोस्, नेपालीमा:\nसमस्या: <समस्या>\nउपाय: <चरण १>\nउपाय: <चरण २>\nउपाय: <चरण ३>\nनोट: <सावधानी/सुझाव>`,
-  parse(t){const d={steps:[]};t.split('\n').forEach(l=>{const[k,...r]=l.split(':');const v=r.join(':').trim();if(!v)return;if(/समस्या|problem/i.test(k))d.problem=v;else if(/उपाय|step/i.test(k))d.steps.push(v);else if(/नोट|note/i.test(k))d.note=v;});return d;},
+  prompt:()=>`नेपाली ज्योतिषी भएर "उपाय" कार्ड बनाउनुहोस्, नेपालीमा:\nसमस्या: <समस्या>\nउपाय: <चरण १>\nउपाय: <चरण २>\nउपाय: <चरण ३>\nनोट: <सावधानी/सुझाव>\nयदि कुनै चरण लामो/व्याख्यात्मक हुन्छ भने "छोटो उप-शीर्षक: व्याख्या" ढाँचामा लेख्नुहोस्। छोटो चरणलाई सामान्य वाक्यमा नै राख्नुहोस्।`,
+  parse(t){ return parseProblemStepsNote(t); },
   caption:d=>`${d.problem||'जीवनको बाधा हटाउने उपाय'} 🪔\n\n${(d.steps||[]).map((p,i)=>(DEV[i]||i+1)+'. '+p).join('\n')}\n\n${d.note||''}\n\nयो उपाय प्रियजनलाई Share गर्नुहोस्, पेज Follow गर्नुहोस्। कस्तो लाग्यो? Comment 🙏\n\n#वैदिकउपाय #ज्योतिष #VidhiChakra #SanatanDharma #Nepal #VedicRemedy` };
 
 CARDS.prashna={ id:'prashna', label:'प्रश्न', animatable:true,
@@ -2528,6 +2582,12 @@ function fontSelect(d,re){ const w=document.createElement('div'); w.className='f
   const sel=document.createElement('select'); sel.style.cssText="font-family:Mukta;font-size:15px;color:#F0E6D2;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:10px 11px;";
   Object.keys(TEXTFONTS).forEach(key=>{ const o=document.createElement('option'); o.value=key; o.textContent=TEXTFONTS[key].n; o.style.color='#111'; if((d.font||'tiro')===key)o.selected=true; sel.appendChild(o); });
   sel.onchange=()=>{ d.font=sel.value; re(); }; w.appendChild(sel); return w; }
+const CHIPCOLORS={ gold:{n:'सुनौलो · Gold',c:C.goldHi}, teal:{n:'फिरोजी · Teal',c:'#6FE7DE'}, rose:{n:'गुलाबी · Rose',c:'#F2A6C9'}, mint:{n:'मिन्ट · Mint',c:'#8EE6A8'}, lavender:{n:'बैजनी · Lavender',c:'#C9B6F2'} };
+function highlightSelect(d,re){ const w=document.createElement('div'); w.className='field';
+  const l=document.createElement('label'); l.textContent='उप-शीर्षक हाइलाइट · Sub-header Highlight'; w.appendChild(l);
+  const sel=document.createElement('select'); sel.style.cssText="font-family:Mukta;font-size:15px;color:#F0E6D2;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:10px 11px;";
+  Object.keys(CHIPCOLORS).forEach(key=>{ const o=document.createElement('option'); o.value=key; o.textContent=CHIPCOLORS[key].n; o.style.color='#111'; if((d.highlightColor||'gold')===key)o.selected=true; sel.appendChild(o); });
+  sel.onchange=()=>{ d.highlightColor=sel.value; re(); }; w.appendChild(sel); return w; }
 function colorSelect(d,re,withMulti){ const w=document.createElement('div'); w.className='field';
   const l=document.createElement('label'); l.textContent='रङ · Color'; w.appendChild(l);
   const sel=document.createElement('select'); sel.style.cssText="font-family:Mukta;font-size:15px;color:#F0E6D2;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:10px 11px;";
@@ -2549,8 +2609,8 @@ function photoUpload(d,re){ const w=document.createElement('div'); w.className='
 function buildPanel(k){ panel.innerHTML=''; const d=state[k];
   const title=document.createElement('div'); title.className='sec-title'; title.textContent=LABELS[k]+' · सम्पादन'; panel.appendChild(title);
   const re=()=>renderPreview();
-  if(k==='gyan'){ panel.appendChild(fld('शीर्षक',d.heading,v=>{d.heading=v;re();})); panel.appendChild(listEditor('बुँदाहरू',d.points,re,5)); panel.appendChild(fld('स्रोत',d.source,v=>{d.source=v;re();})); }
-  else if(k==='upaya'){ panel.appendChild(fld('समस्या',d.problem,v=>{d.problem=v;re();})); panel.appendChild(listEditor('उपाय चरणहरू',d.steps,re,5)); panel.appendChild(fld('नोट',d.note,v=>{d.note=v;re();})); }
+  if(k==='gyan'){ panel.appendChild(fld('शीर्षक',d.heading,v=>{d.heading=v;re();})); panel.appendChild(listEditor('बुँदाहरू',d.points,re,5)); panel.appendChild(fld('स्रोत',d.source,v=>{d.source=v;re();})); panel.appendChild(highlightSelect(d,re)); }
+  else if(k==='upaya'){ panel.appendChild(fld('समस्या',d.problem,v=>{d.problem=v;re();})); panel.appendChild(listEditor('उपाय चरणहरू',d.steps,re,5)); panel.appendChild(fld('नोट',d.note,v=>{d.note=v;re();})); panel.appendChild(highlightSelect(d,re)); }
   else if(k==='prashna'){ panel.appendChild(fld('प्रश्न',d.question,v=>{d.question=v;re();},2)); panel.appendChild(fld('उत्तर',d.answer,v=>{d.answer=v;re();},4)); }
   else if(k==='mantra'){ panel.appendChild(fld('मन्त्र (Enter ले लाइन तोड्नुहोस्)',d.mantra,v=>{d.mantra=v;re();},4)); panel.appendChild(fld('अर्थ',d.meaning,v=>{d.meaning=v;re();},4)); }
   else if(k==='rashifal'){ panel.appendChild(fld('राशि',d.sign,v=>{d.sign=v;re();})); panel.appendChild(fld('भविष्यवाणी',d.prediction,v=>{d.prediction=v;re();},4)); panel.appendChild(listEditor('संकेत',d.keywords,re,4)); }
