@@ -2274,7 +2274,7 @@ function listBlocks(c,items,s,size,gapBefore,chipColor){
         fHead(c,size*0.9*s,800); c.fillStyle=accent; c.fillText(DEV[i]||(i+1), colL-58*s, y+chipH*0.74);
         c.font=hf; roundRect(c,colL,y,hw+chipPadX*2,chipH,chipH*0.34); c.fillStyle=accent; c.fill();
         c.fillStyle=C.base0; c.fillText(label, colL+chipPadX, y+chipH*0.7);
-        c.font=bfont; c.fillStyle=C.ink;
+        c.font=bfont; c.fillStyle=C.hero;
         lines.forEach((ln,j)=>c.fillText(ln, colL, y+headRowH+size*s*0.82+j*lh));
       }});
     } else {
@@ -2282,7 +2282,7 @@ function listBlocks(c,items,s,size,gapBefore,chipColor){
       out.push({gap:i===0?gapBefore:30*s,h:lines.length*lh,draw:(cx,y)=>{
         c.font=font; c.textAlign='left';
         c.fillStyle=accent; c.fillText(DEV[i]||(i+1), colL-58*s, y+size*s*0.82);
-        c.fillStyle=C.ink; lines.forEach((ln,j)=>c.fillText(ln, colL, y+size*s*0.82+j*lh));
+        c.fillStyle=C.hero; lines.forEach((ln,j)=>c.fillText(ln, colL, y+size*s*0.82+j*lh));
       }});
     }
   });
